@@ -6,7 +6,11 @@ import LinePiece from "./pieces/line";
 import Square from "./pieces/square";
 import TPiece from "./pieces/t-piece";
 
-const Viewport = () => {
+interface ViewPortProps {
+  currentPiece: JSX.Element;
+}
+
+const Viewport = ({ currentPiece }: ViewPortProps) => {
   return (
     <div className="w-[400px] h-[800px] bg-black flex justify-center items-center border-4 border-gray-600 border-solid">
       {/* <LPieceInverted variant="position1" />
@@ -22,6 +26,7 @@ const Viewport = () => {
       <FourPieceInverted variant="position1" />
       <FourPieceInverted variant="position2" /> */}
       {/* <Square variant="position1" /> */}
+      {currentPiece}
     </div>
   );
 };
