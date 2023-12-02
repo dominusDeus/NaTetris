@@ -3,7 +3,12 @@ import Piece from "./pieces/l-piece";
 import { twMerge } from "tailwind-merge";
 import { Atom } from "./pieces/atom";
 import { GamePiece, PieceAtom } from "./types";
-import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants";
+import {
+  VIEWPORT_HEIGHT,
+  REFRESH_RATE,
+  PIXEL_SIZE,
+  VIEWPORT_WIDTH,
+} from "./constants";
 import * as AllFuckingPieces from "./pieces/pieces";
 
 function generateRandomPiece(): GamePiece {
@@ -22,9 +27,16 @@ function checkCollission(a: any, b: any): boolean {
 }
 
 function getPieceDimensions(piece: GamePiece) {
+  const pieceSortedByHeight = piece.atoms.sort((a, b) => {
+    return a.y > b.y ? -1 : 1;
+  });
+  const pieceSortedByWidth = piece.atoms.sort((a, b) => {
+    return a.x > b.x ? -1 : 1;
+  });
+
   return {
-    height: 2,
-    width: 3,
+    width: pieceSortedByWidth[0].x + 1,
+    height: pieceSortedByHeight[0].y + 1,
   };
 }
 
@@ -33,13 +45,18 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight;
 }
 
-function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
-  return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1);
+function checkIfAtomCollidesWithOtherAtoms(
+  atom: PieceAtom,
+  otherAtoms: PieceAtom[]
+): boolean {
+  return otherAtoms.some(
+    (currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1
+  );
 }
 
 function checkIfPieceHitsOtherPieces(
   currentPieceInViewport: GamePiece,
-  currentGameState: PieceAtom[],
+  currentGameState: PieceAtom[]
 ): boolean {
   return currentPieceInViewport.atoms.some((atom) =>
     checkIfAtomCollidesWithOtherAtoms(
@@ -47,13 +64,15 @@ function checkIfPieceHitsOtherPieces(
         x: currentPieceInViewport.x + atom.x,
         y: currentPieceInViewport.y + atom.y,
       },
-      currentGameState,
-    ),
+      currentGameState
+    )
   );
 }
 
 const Viewport = () => {
-  const [currentPieceInViewport, setCurrentPiece] = useState(() => generateRandomPiece());
+  const [currentPieceInViewport, setCurrentPiece] = useState(() =>
+    generateRandomPiece()
+  );
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([]);
 
   useEffect(() => {
@@ -67,7 +86,7 @@ const Viewport = () => {
           };
           const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
             futureCurrentPieceInViewport,
-            currentGameState,
+            currentGameState
           );
           if (pieceHasHitOtherPieces) return currentPieceInViewport;
 
@@ -90,7 +109,7 @@ const Viewport = () => {
           };
           const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
             futureCurrentPieceInViewport,
-            currentGameState,
+            currentGameState
           );
           if (pieceHasHitOtherPieces) return currentPieceInViewport;
 
@@ -107,7 +126,8 @@ const Viewport = () => {
         });
       } else if (ev.key === "ArrowDown") {
         setCurrentPiece((currentPiece) => {
-          const bottom = currentPiece.y + getPieceDimensions(currentPiece).height;
+          const bottom =
+            currentPiece.y + getPieceDimensions(currentPiece).height;
           return {
             ...currentPiece,
             y: bottom,
@@ -115,7 +135,8 @@ const Viewport = () => {
         });
       } else if (ev.key === " ") {
         setCurrentPiece((currentPiece) => {
-          const bottom = VIEWPORT_HEIGHT - getPieceDimensions(currentPiece).height;
+          const bottom =
+            VIEWPORT_HEIGHT - getPieceDimensions(currentPiece).height;
 
           return {
             ...currentPiece,
@@ -168,7 +189,7 @@ const Viewport = () => {
   useEffect(() => {
     const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
       currentPieceInViewport,
-      currentGameState,
+      currentGameState
     );
     if (pieceHasHitOtherPieces) {
       // setCurrentGameState
