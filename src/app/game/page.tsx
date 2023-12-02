@@ -5,14 +5,12 @@ import Viewport from "@/components/viewport";
 import { useGame } from "./game.hooks";
 
 const Game = () => {
-  const { currentPiece } = useGame();
-
   return (
     <div className="flex items-center justify-center h-full gap-4">
       <div className="self-start mt-20">
         <HoldBox />
       </div>
-      <Viewport currentPiece={currentPiece} />
+      <Viewport />
       <div className="self-start mt-20">
         <ComingPiecesBox />
       </div>

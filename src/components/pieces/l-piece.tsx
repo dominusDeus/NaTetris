@@ -1,12 +1,15 @@
-interface LinePieceProps {
+import { CommonProps } from "@/utils/common-props";
+import { twMerge } from "tailwind-merge";
+
+interface LinePieceProps extends CommonProps {
   variant: "position1" | "position2" | "position3" | "position4" | "small";
 }
 
-const LPiece = ({ variant }: LinePieceProps) => {
+const LPiece = ({ className, style, variant }: LinePieceProps) => {
   return (
     <>
       {variant === "position1" && (
-        <div className="flex flex-col">
+        <div className={twMerge("flex flex-col", className)} style={style}>
           <div className="flex">
             <div className="h-10 w-10 bg-orange-300 border border-solid border-gray-500"></div>
           </div>
