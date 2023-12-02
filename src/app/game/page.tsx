@@ -11,7 +11,7 @@ const Game = () => {
         <HoldBox />
       </div>
       <Viewport />
-      <div className="self-start mt-20">
+      <div className="relative self-start mt-20">
         <ComingPiecesBox />
       </div>
     </div>

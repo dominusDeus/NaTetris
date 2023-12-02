@@ -1,4 +1,4 @@
-import LPiece from "@/components/pieces/l-piece";
+import Piece from "@/components/pieces/l-piece";
 import { useEffect } from "react";
 
 interface useGameStore {
@@ -9,6 +9,6 @@ export const useGame = (): useGameStore => {
   useEffect(() => {}, []);
 
   return {
-    currentPiece: <LPiece variant="position1" />,
+    currentPiece: <Piece variant="position1" />,
   };
 };
