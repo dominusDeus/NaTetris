@@ -37,14 +37,14 @@ export const T_PIECE_ATOMS: PieceAtom[] = [
 
 export const Z_PIECE_ATOMS: PieceAtom[] = [
   { x: 1, y: 0 },
-  { x: 1, y: 1 },
+  { x: 2, y: 0 },
   { x: 0, y: 1 },
-  { x: 0, y: 2 },
+  { x: 1, y: 1 },
 ];
 
 export const Z_INVERTED_PIECE_ATOMS: PieceAtom[] = [
   { x: 0, y: 0 },
-  { x: 0, y: 1 },
+  { x: 1, y: 0 },
   { x: 1, y: 1 },
-  { x: 2, y: 2 },
+  { x: 2, y: 1 },
 ];

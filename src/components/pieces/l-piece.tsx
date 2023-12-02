@@ -11,8 +11,8 @@ interface PieceProps extends CommonProps {
 
 function getAtomsDimensions(atoms: PieceAtom[]): Dimensions {
   return {
-    height: atoms.sort((a, b) => (a.y > b.y ? -1 : 1))[0].y + 1,
-    width: atoms.sort((a, b) => (a.x > b.x ? -1 : 1))[0].x + 1,
+    height: atoms.toSorted((a, b) => (a.y > b.y ? -1 : 1))[0].y + 1,
+    width: atoms.toSorted((a, b) => (a.x > b.x ? -1 : 1))[0].x + 1,
   };
 }
 
