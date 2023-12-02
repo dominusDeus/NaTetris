@@ -1,8 +1,8 @@
 "use client";
+
 import ComingPiecesBox from "@/components/coming-pieces-box";
 import HoldBox from "@/components/hold-box";
 import Viewport from "@/components/viewport";
-import { useGame } from "./game.hooks";
 
 const Game = () => {
   return (

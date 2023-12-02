@@ -1,5 +1,5 @@
 import FourPieceInverted from "./pieces/four-piece-inverted";
-import Piece from "./pieces/l-piece";
+import Piece from "./pieces/piece";
 import LinePiece from "./pieces/line";
 
 const HoldBox = () => {

@@ -1,4 +1,4 @@
-import Piece from "@/components/pieces/l-piece";
+import Piece from "@/components/pieces/piece";
 import { useEffect } from "react";
 
 interface useGameStore {

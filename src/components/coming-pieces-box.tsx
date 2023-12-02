@@ -1,4 +1,4 @@
-import Piece from "./pieces/l-piece";
+import Piece from "./pieces/piece";
 import { I_PIECE_ATOMS, L_PIECE_ATOMS, O_PIECE_ATOMS } from "./pieces/pieces";
 
 const ComingPiecesBox = () => {
