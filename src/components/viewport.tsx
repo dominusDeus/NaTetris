@@ -3,12 +3,7 @@ import Piece from "./pieces/piece";
 import { twMerge } from "tailwind-merge";
 import { Atom } from "./pieces/atom";
 import { GamePiece, PieceAtom } from "./types";
-import {
-  VIEWPORT_HEIGHT,
-  REFRESH_RATE,
-  PIXEL_SIZE,
-  VIEWPORT_WIDTH,
-} from "./constants";
+import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants";
 import * as AllPieces from "./pieces/pieces";
 
 function generateRandomPiece(): GamePiece {
@@ -24,10 +19,10 @@ function generateRandomPiece(): GamePiece {
 }
 
 function getPieceDimensions(piece: GamePiece) {
-  const pieceSortedByHeight = piece.atoms.sort((a, b) => {
+  const pieceSortedByHeight = piece.atoms.toSorted((a, b) => {
     return a.y > b.y ? -1 : 1;
   });
-  const pieceSortedByWidth = piece.atoms.sort((a, b) => {
+  const pieceSortedByWidth = piece.atoms.toSorted((a, b) => {
     return a.x > b.x ? -1 : 1;
   });
 
@@ -42,18 +37,13 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight;
 }
 
-function checkIfAtomCollidesWithOtherAtoms(
-  atom: PieceAtom,
-  otherAtoms: PieceAtom[]
-): boolean {
-  return otherAtoms.some(
-    (currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1
-  );
+function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
+  return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1);
 }
 
 function checkIfPieceHitsOtherPieces(
   currentPieceInViewport: GamePiece,
-  currentGameState: PieceAtom[]
+  currentGameState: PieceAtom[],
 ): boolean {
   return currentPieceInViewport.atoms.some((atom) =>
     checkIfAtomCollidesWithOtherAtoms(
@@ -61,15 +51,15 @@ function checkIfPieceHitsOtherPieces(
         x: currentPieceInViewport.x + atom.x,
         y: currentPieceInViewport.y + atom.y,
       },
-      currentGameState
-    )
+      currentGameState,
+    ),
   );
 }
 
 function Viewport() {
   const [gameOver, setGameOver] = useState(false);
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() =>
-    generateRandomPiece()
+    generateRandomPiece(),
   );
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([]);
 
@@ -79,64 +69,56 @@ function Viewport() {
     const handleKeydown = (ev: KeyboardEvent) => {
       console.log("EV KEY", ev.key);
       if (ev.key === "ArrowLeft") {
-        setCurrentPiece((currentPieceInViewport) => {
-          const futureCurrentPieceInViewport: GamePiece = {
-            ...currentPieceInViewport,
-            x: currentPieceInViewport.x - 1,
-          };
-          const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-            futureCurrentPieceInViewport,
-            currentGameState
-          );
-          if (pieceHasHitOtherPieces) return currentPieceInViewport;
+        const futureCurrentPieceInViewport: GamePiece = {
+          ...currentPieceInViewport,
+          x: currentPieceInViewport.x - 1,
+        };
+        const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
+          futureCurrentPieceInViewport,
+          currentGameState,
+        );
+        if (pieceHasHitOtherPieces) return;
 
-          const hasHitBorder = currentPieceInViewport.atoms.some((atom) => {
-            const atomNextX = futureCurrentPieceInViewport.x + atom.x;
-            return atomNextX < 0;
-          });
-          if (hasHitBorder) return currentPieceInViewport;
-
-          return {
-            ...currentPieceInViewport,
-            x: currentPieceInViewport.x - 1,
-          };
+        const hasHitBorder = futureCurrentPieceInViewport.atoms.some((atom) => {
+          const atomNextX = futureCurrentPieceInViewport.x + atom.x;
+          return atomNextX < 0;
         });
+        if (hasHitBorder) return;
+
+        setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowRight") {
-        setCurrentPiece((currentPieceInViewport) => {
-          const futureCurrentPieceInViewport: GamePiece = {
-            ...currentPieceInViewport,
-            x: currentPieceInViewport.x + 1,
-          };
-          const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-            futureCurrentPieceInViewport,
-            currentGameState
-          );
-          if (pieceHasHitOtherPieces) return currentPieceInViewport;
+        const futureCurrentPieceInViewport: GamePiece = {
+          ...currentPieceInViewport,
+          x: currentPieceInViewport.x + 1,
+        };
+        const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
+          futureCurrentPieceInViewport,
+          currentGameState,
+        );
+        if (pieceHasHitOtherPieces) return;
 
-          const hasHitBorder = currentPieceInViewport.atoms.some((atom) => {
-            const atomNextX = currentPieceInViewport.x + atom.x + 1;
-            return atomNextX >= VIEWPORT_WIDTH;
-          });
-          if (hasHitBorder) return currentPieceInViewport;
-
-          return {
-            ...currentPieceInViewport,
-            x: currentPieceInViewport.x + 1,
-          };
+        const hasHitBorder = currentPieceInViewport.atoms.some((atom) => {
+          const atomNextX = currentPieceInViewport.x + atom.x + 1;
+          return atomNextX >= VIEWPORT_WIDTH;
         });
+        if (hasHitBorder) return;
+
+        setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowDown") {
-        setCurrentPiece((currentPiece) => {
-          const bottom =
-            currentPiece.y + getPieceDimensions(currentPiece).height;
-          return {
-            ...currentPiece,
-            y: bottom,
-          };
-        });
+        const futureCurrentPieceInViewport: GamePiece = {
+          ...currentPieceInViewport,
+          y: currentPieceInViewport.y + 1,
+        };
+        const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
+          futureCurrentPieceInViewport,
+          currentGameState,
+        );
+        if (pieceHasHitOtherPieces) return currentPieceInViewport;
+
+        setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === " ") {
         setCurrentPiece((currentPiece) => {
-          const bottom =
-            VIEWPORT_HEIGHT - getPieceDimensions(currentPiece).height;
+          const bottom = VIEWPORT_HEIGHT - getPieceDimensions(currentPiece).height;
 
           return {
             ...currentPiece,
@@ -163,7 +145,7 @@ function Viewport() {
     addEventListener("keydown", handleKeydown);
 
     return () => removeEventListener("keydown", handleKeydown);
-  }, [currentGameState, gameOver]);
+  }, [currentGameState, currentPieceInViewport, gameOver]);
 
   // Game loop
   useEffect(() => {
@@ -196,7 +178,7 @@ function Viewport() {
 
     const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
       currentPieceInViewport,
-      currentGameState
+      currentGameState,
     );
     if (pieceHasHitOtherPieces) {
       setCurrentGameState((v) => [
