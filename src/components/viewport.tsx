@@ -18,11 +18,11 @@ function generateRandomPiece(): GamePiece {
   };
 }
 
-function getPieceDimensions(piece: GamePiece) {
-  const pieceSortedByHeight = piece.atoms.toSorted((a, b) => {
+function getAtomsDimensions(atoms: PieceAtom[]) {
+  const pieceSortedByHeight = atoms.toSorted((a, b) => {
     return a.y > b.y ? -1 : 1;
   });
-  const pieceSortedByWidth = piece.atoms.toSorted((a, b) => {
+  const pieceSortedByWidth = atoms.toSorted((a, b) => {
     return a.x > b.x ? -1 : 1;
   });
 
@@ -33,7 +33,7 @@ function getPieceDimensions(piece: GamePiece) {
 }
 
 function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
-  const pieceHeight = getPieceDimensions(currentPiece).height;
+  const pieceHeight = getAtomsDimensions(currentPiece.atoms).height;
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight;
 }
 
@@ -118,7 +118,7 @@ function Viewport() {
         setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === " ") {
         setCurrentPiece((currentPiece) => {
-          const bottom = VIEWPORT_HEIGHT - getPieceDimensions(currentPiece).height;
+          const bottom = VIEWPORT_HEIGHT - getAtomsDimensions(currentPiece.atoms).height;
 
           return {
             ...currentPiece,
