@@ -56,6 +56,18 @@ function checkIfPieceHitsOtherPieces(
   );
 }
 
+function rotatePiece(atoms: PieceAtom[]) {
+  return atoms.map(({ x, y }) => {
+    const dimensions = getAtomsDimensions(atoms);
+    const width = dimensions.width - 1; // We substract 1 because the coords start at 0
+
+    return {
+      x: width - y,
+      y: x,
+    };
+  });
+}
+
 function Viewport() {
   const [gameOver, setGameOver] = useState(false);
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() =>
