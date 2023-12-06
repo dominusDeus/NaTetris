@@ -37,10 +37,14 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight;
 }
 
+// TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
+// Then the function should be refactored to only to the task inside the array.
 function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
   return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1);
 }
 
+// TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
+// Then the function should be refactored to only to the task inside the array.
 function checkIfPieceHitsOtherPieces(
   currentPieceInViewport: GamePiece,
   currentGameState: PieceAtom[],
@@ -56,6 +60,8 @@ function checkIfPieceHitsOtherPieces(
   );
 }
 
+// TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
+// Then the function should be refactored to only to the task inside the array.
 function rotatePiece(atoms: PieceAtom[]) {
   return atoms.map(({ x, y }) => {
     const dimensions = getAtomsDimensions(atoms);
@@ -128,6 +134,14 @@ function Viewport() {
         if (pieceHasHitOtherPieces) return currentPieceInViewport;
 
         setCurrentPiece(futureCurrentPieceInViewport);
+      } else if (ev.key === "ArrowUp") {
+        const futureAtoms = rotatePiece(currentPieceInViewport.atoms);
+
+        console.log("futureAtoms", futureAtoms);
+        setCurrentPiece({
+          ...currentPieceInViewport,
+          atoms: futureAtoms,
+        });
       } else if (ev.key === " ") {
         setCurrentPiece((currentPiece) => {
           const bottom = VIEWPORT_HEIGHT - getAtomsDimensions(currentPiece.atoms).height;
