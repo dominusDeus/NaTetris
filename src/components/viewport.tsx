@@ -216,7 +216,7 @@ function Viewport() {
       ]);
       setCurrentPiece(generateRandomPiece());
     }
-  }, [currentGameState, currentPieceInViewport]);
+  }, [currentGameState, currentPieceInViewport, gameOver]);
 
   return (
     <div className="relative w-[400px] h-[800px] bg-black flex justify-center items-center border-4 box-content border-gray-600 border-solid">
