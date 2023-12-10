@@ -1,14 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Piece from "./pieces/piece";
 import { twMerge } from "tailwind-merge";
 import { Atom } from "./pieces/atom";
 import { GamePiece, PieceAtom } from "./types";
-import {
-  VIEWPORT_HEIGHT,
-  REFRESH_RATE,
-  PIXEL_SIZE,
-  VIEWPORT_WIDTH,
-} from "./constants";
+import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants";
 import * as AllPieces from "./pieces/pieces";
 
 function x() {
@@ -49,20 +44,15 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
-function checkIfAtomCollidesWithOtherAtoms(
-  atom: PieceAtom,
-  otherAtoms: PieceAtom[]
-): boolean {
-  return otherAtoms.some(
-    (currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1
-  );
+function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
+  return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1);
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
 function checkIfPieceHitsOtherPieces(
   currentPieceInViewport: GamePiece,
-  currentGameState: PieceAtom[]
+  currentGameState: PieceAtom[],
 ): boolean {
   return currentPieceInViewport.piece.atoms.some((atom) =>
     checkIfAtomCollidesWithOtherAtoms(
@@ -70,8 +60,8 @@ function checkIfPieceHitsOtherPieces(
         x: currentPieceInViewport.x + atom.x,
         y: currentPieceInViewport.y + atom.y,
       },
-      currentGameState
-    )
+      currentGameState,
+    ),
   );
 }
 
@@ -92,9 +82,20 @@ function rotateAtomsToTheRight(atoms: PieceAtom[]) {
 function Viewport() {
   const [gameOver, setGameOver] = useState(false);
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() =>
-    generateRandomPiece()
+    generateRandomPiece(),
   );
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([]);
+
+  const addPieceToGameState = useCallback((piece: GamePiece) => {
+    setCurrentGameState((v) => [
+      ...v,
+      ...piece.piece.atoms.map((internalAtomCoords) => ({
+        x: piece.x + internalAtomCoords.x,
+        y: piece.y + internalAtomCoords.y,
+      })),
+    ]);
+    setCurrentPiece(generateRandomPiece());
+  }, []);
 
   useEffect(() => {
     if (gameOver) return;
@@ -108,16 +109,14 @@ function Viewport() {
         };
         const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
           futureCurrentPieceInViewport,
-          currentGameState
+          currentGameState,
         );
         if (pieceHasHitOtherPieces) return;
 
-        const hasHitBorder = futureCurrentPieceInViewport.piece.atoms.some(
-          (atom) => {
-            const atomNextX = futureCurrentPieceInViewport.x + atom.x;
-            return atomNextX < 0;
-          }
-        );
+        const hasHitBorder = futureCurrentPieceInViewport.piece.atoms.some((atom) => {
+          const atomNextX = futureCurrentPieceInViewport.x + atom.x;
+          return atomNextX < 0;
+        });
         if (hasHitBorder) return;
 
         setCurrentPiece(futureCurrentPieceInViewport);
@@ -128,7 +127,7 @@ function Viewport() {
         };
         const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
           futureCurrentPieceInViewport,
-          currentGameState
+          currentGameState,
         );
         if (pieceHasHitOtherPieces) return;
 
@@ -146,7 +145,7 @@ function Viewport() {
         };
         const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
           futureCurrentPieceInViewport,
-          currentGameState
+          currentGameState,
         );
         if (pieceHasHitOtherPieces) return currentPieceInViewport;
 
@@ -159,51 +158,39 @@ function Viewport() {
             atoms: rotateAtomsToTheRight(currentPieceInViewport.piece.atoms),
           },
         };
-        const { width: pieceWidth } = getAtomsDimensions(
-          futureCurrentPieceInViewport.piece.atoms
-        );
+        const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms);
 
-        const hasHitBorder =
-          currentPieceInViewport.x + pieceWidth >= VIEWPORT_WIDTH;
+        const hasHitBorder = currentPieceInViewport.x + pieceWidth >= VIEWPORT_WIDTH;
         if (hasHitBorder) {
-          const afa =
-            futureCurrentPieceInViewport.x + pieceWidth - VIEWPORT_WIDTH;
-          futureCurrentPieceInViewport.x -= afa;
+          const exceedingWidth = futureCurrentPieceInViewport.x + pieceWidth - VIEWPORT_WIDTH;
+          futureCurrentPieceInViewport.x -= exceedingWidth;
         }
 
         setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === " ") {
-        setCurrentPiece((currentPiece) => {
-          const bottom =
-            VIEWPORT_HEIGHT -
-            getAtomsDimensions(currentPiece.piece.atoms).height;
+        const futureCurrentPieceInViewport = {
+          ...currentPieceInViewport,
+          y: currentPieceInViewport.y + 1,
+        };
 
-          return {
-            ...currentPiece,
-            y: bottom,
-          };
-        });
+        while (futureCurrentPieceInViewport.y <= VIEWPORT_HEIGHT) {
+          const hit =
+            checkIfPieceHitsOtherPieces(futureCurrentPieceInViewport, currentGameState) ||
+            checkIfPieceHitsBottom(futureCurrentPieceInViewport);
+          if (hit) {
+            addPieceToGameState(futureCurrentPieceInViewport);
+            break;
+          } else {
+            futureCurrentPieceInViewport.y += 1;
+          }
+        }
       }
-      // else if (ev.key === "ArrowDown") {
-      //   setCurrentPiece((currentPieceInViewport) => {
-      //     const hasHitBorder = currentPieceInViewport.atoms.some((atom) => {
-      //       const atomNextX = currentPieceInViewport.x + atom.x + 1;
-      //       return atomNextX >= VIEWPORT_WIDTH;
-      //     });
-      //     if (hasHitBorder) return currentPieceInViewport;
-
-      //     return {
-      //       ...currentPieceInViewport,
-      //       x: currentPieceInViewport.x + 1,
-      //     };
-      //   });
-      // }
     };
 
     addEventListener("keydown", handleKeydown);
 
     return () => removeEventListener("keydown", handleKeydown);
-  }, [currentGameState, currentPieceInViewport, gameOver]);
+  }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver]);
 
   // Game loop
   useEffect(() => {
@@ -236,19 +223,10 @@ function Viewport() {
 
     const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
       currentPieceInViewport,
-      currentGameState
+      currentGameState,
     );
     if (pieceHasHitOtherPieces) {
-      setCurrentGameState((v) => [
-        ...v,
-        ...currentPieceInViewport.piece.atoms.map((internalAtomCoords) => ({
-          x: currentPieceInViewport.x + internalAtomCoords.x,
-          y: currentPieceInViewport.y + internalAtomCoords.y,
-        })),
-      ]);
-      setCurrentPiece(generateRandomPiece());
-    } else {
-      //
+      addPieceToGameState(currentPieceInViewport);
     }
 
     const pieceHitsBottom = checkIfPieceHitsBottom(currentPieceInViewport);
@@ -262,9 +240,7 @@ function Viewport() {
       ]);
       setCurrentPiece(generateRandomPiece());
     }
-  }, [currentGameState, currentPieceInViewport, gameOver]);
-
-  // console.log(currentPieceInViewport);
+  }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver]);
 
   return (
     <div className="relative w-[400px] h-[800px] bg-black flex justify-center items-center border-4 box-content border-gray-600 border-solid">
