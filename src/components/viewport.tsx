@@ -77,10 +77,10 @@ function checkIfPieceHitsOtherPieces(
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
-function rotatePiece(atoms: PieceAtom[]) {
+function rotateAtomsToTheRight(atoms: PieceAtom[]) {
   return atoms.map(({ x, y }) => {
     const dimensions = getAtomsDimensions(atoms);
-    const width = dimensions.width - 1; // We substract 1 because the coords start at 0
+    const width = dimensions.height - 1; // We substract 1 because the coords start at 0
 
     return {
       x: width - y,
@@ -152,15 +152,26 @@ function Viewport() {
 
         setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowUp") {
-        const futureAtoms = rotatePiece(currentPieceInViewport.piece.atoms);
-
-        setCurrentPiece({
+        const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
           piece: {
             ...currentPieceInViewport.piece,
-            atoms: futureAtoms,
+            atoms: rotateAtomsToTheRight(currentPieceInViewport.piece.atoms),
           },
-        });
+        };
+        const { width: pieceWidth } = getAtomsDimensions(
+          futureCurrentPieceInViewport.piece.atoms
+        );
+
+        const hasHitBorder =
+          currentPieceInViewport.x + pieceWidth >= VIEWPORT_WIDTH;
+        if (hasHitBorder) {
+          const afa =
+            futureCurrentPieceInViewport.x + pieceWidth - VIEWPORT_WIDTH;
+          futureCurrentPieceInViewport.x -= afa;
+        }
+
+        setCurrentPiece(futureCurrentPieceInViewport);
       } else if (ev.key === " ") {
         setCurrentPiece((currentPiece) => {
           const bottom =
@@ -252,6 +263,8 @@ function Viewport() {
       setCurrentPiece(generateRandomPiece());
     }
   }, [currentGameState, currentPieceInViewport, gameOver]);
+
+  // console.log(currentPieceInViewport);
 
   return (
     <div className="relative w-[400px] h-[800px] bg-black flex justify-center items-center border-4 box-content border-gray-600 border-solid">
