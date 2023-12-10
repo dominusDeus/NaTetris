@@ -93,23 +93,6 @@ function getYLinesFromCurrentGameState(gameState: PieceAtom[]): PieceAtom[][] {
   return result;
 }
 
-function removeYLineAtoms(atoms: PieceAtom[], y: number): PieceAtom[] {
-  return atoms.filter((atom) => atom.y !== y);
-}
-
-function repositionAtomsBelowY(atoms: PieceAtom[], y: number): PieceAtom[] {
-  return atoms.map((atom) => {
-    if (atom.y < y) {
-      return {
-        ...atom,
-        y: atom.y + 1,
-      };
-    }
-
-    return atom;
-  });
-}
-
 const isLineComplete = (lineAtoms: PieceAtom[]): boolean => {
   return lineAtoms.length === VIEWPORT_WIDTH;
 };
