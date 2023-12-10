@@ -175,7 +175,6 @@ function Viewport({
         piece2: comingPieces.piece3,
         piece3: generateRandomPiece(),
       });
-      // setCurrentPiece(generateRandomPiece());
     },
     [
       comingPieces.piece1,
