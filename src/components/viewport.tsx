@@ -79,6 +79,72 @@ function rotateAtomsToTheRight(atoms: PieceAtom[]) {
   });
 }
 
+function getYLinesFromCurrentGameState(gameState: PieceAtom[]): PieceAtom[][] {
+  const result: PieceAtom[][] = [];
+
+  gameState.forEach(({ x, y }) => {
+    if (!result[y]) {
+      result[y] = [];
+    }
+
+    result[y].push({ x, y });
+  });
+
+  return result;
+}
+
+function removeYLineAtoms(atoms: PieceAtom[], y: number): PieceAtom[] {
+  return atoms.filter((atom) => atom.y !== y);
+}
+
+function repositionAtomsBelowY(atoms: PieceAtom[], y: number): PieceAtom[] {
+  return atoms.map((atom) => {
+    if (atom.y < y) {
+      return {
+        ...atom,
+        y: atom.y + 1,
+      };
+    }
+
+    return atom;
+  });
+}
+
+const isLineComplete = (lineAtoms: PieceAtom[]): boolean => {
+  return lineAtoms.length === VIEWPORT_WIDTH;
+};
+
+function removeCompletedLines(gameState: PieceAtom[]): PieceAtom[] {
+  const YLines = getYLinesFromCurrentGameState(gameState);
+
+  const completedYLines = YLines.filter((lineAtoms) => {
+    return isLineComplete(lineAtoms);
+  });
+
+  const uncompletedYLines = YLines.filter((lineAtoms) => {
+    return !isLineComplete(lineAtoms);
+  });
+
+  return completedYLines
+    .reduce((acc, completedLine) => {
+      const completedY = completedLine[0].y;
+
+      return acc.map((uncompletedLine) => {
+        const lineShouldReposition = uncompletedLine[0].y < completedY;
+        if (lineShouldReposition) {
+          // This below is equal to `repositionAtomsBelowY()`
+          return uncompletedLine.map((lineAtom) => ({
+            ...lineAtom,
+            y: lineAtom.y + 1,
+          }));
+        }
+
+        return uncompletedLine;
+      });
+    }, uncompletedYLines)
+    .flat();
+}
+
 function Viewport() {
   const [gameOver, setGameOver] = useState(false);
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() =>
@@ -86,16 +152,21 @@ function Viewport() {
   );
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([]);
 
-  const addPieceToGameState = useCallback((piece: GamePiece) => {
-    setCurrentGameState((v) => [
-      ...v,
-      ...piece.piece.atoms.map((internalAtomCoords) => ({
-        x: piece.x + internalAtomCoords.x,
-        y: piece.y + internalAtomCoords.y,
-      })),
-    ]);
-    setCurrentPiece(generateRandomPiece());
-  }, []);
+  const addPieceToGameState = useCallback(
+    (piece: GamePiece) => {
+      const newGameState = [
+        ...currentGameState,
+        ...piece.piece.atoms.map((internalAtomCoords) => ({
+          x: piece.x + internalAtomCoords.x,
+          y: piece.y + internalAtomCoords.y,
+        })),
+      ];
+
+      setCurrentGameState(removeCompletedLines(newGameState));
+      setCurrentPiece(generateRandomPiece());
+    },
+    [currentGameState],
+  );
 
   useEffect(() => {
     if (gameOver) return;
@@ -231,14 +302,7 @@ function Viewport() {
 
     const pieceHitsBottom = checkIfPieceHitsBottom(currentPieceInViewport);
     if (pieceHitsBottom) {
-      setCurrentGameState((v) => [
-        ...v,
-        ...currentPieceInViewport.piece.atoms.map((internalAtomCoords) => ({
-          x: currentPieceInViewport.x + internalAtomCoords.x,
-          y: currentPieceInViewport.y + internalAtomCoords.y,
-        })),
-      ]);
-      setCurrentPiece(generateRandomPiece());
+      addPieceToGameState(currentPieceInViewport);
     }
   }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver]);
 

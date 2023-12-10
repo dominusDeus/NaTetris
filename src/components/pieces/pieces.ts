@@ -1,5 +1,11 @@
 import { PieceAtom, PieceStructure } from "../types";
 
+/**
+ * 17 * 3 = 51
+ * 15 * 2 = 30 = 81
+ * 9 * 2 = 18 = 99
+ */
+
 export const L_PIECE_ATOMS: PieceStructure = {
   atoms: [
     { x: 0, y: 0 },
