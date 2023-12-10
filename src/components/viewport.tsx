@@ -96,7 +96,7 @@ function repositionAtomsBelowY(atoms: PieceAtom[], y: number): PieceAtom[] {
   })
 }
 
-const isLineComplete = (lineAtoms: PieceAtom[]): boolean => {
+function isLineComplete(lineAtoms: PieceAtom[]): boolean {
   return lineAtoms.length === VIEWPORT_WIDTH
 }
 
