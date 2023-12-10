@@ -28,6 +28,10 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight
 }
 
+function checkIfPieceHitsLeftBorder(piece: GamePiece) {
+  return piece.x === 0
+}
+
 function checkIfPieceHitsRightBorder(piece: GamePiece) {
   const { width: pieceWidth } = getAtomsDimensions(piece.piece.atoms)
   return piece.x + pieceWidth >= VIEWPORT_WIDTH
@@ -183,6 +187,9 @@ function Viewport(props: ViewportProps) {
     const handleKeydown = (ev: KeyboardEvent) => {
       console.log("EV KEY", ev.key)
       if (ev.key === "ArrowLeft") {
+        const pieceHitsLeftBorder = checkIfPieceHitsLeftBorder(currentPieceInViewport)
+        if (pieceHitsLeftBorder) return
+
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
           x: currentPieceInViewport.x - 1,
@@ -192,12 +199,6 @@ function Viewport(props: ViewportProps) {
           currentGameState,
         )
         if (pieceHasHitOtherPieces) return
-
-        const hasHitBorder = futureCurrentPieceInViewport.piece.atoms.some((atom) => {
-          const atomNextX = futureCurrentPieceInViewport.x + atom.x
-          return atomNextX < 0
-        })
-        if (hasHitBorder) return
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === "ArrowRight") {
