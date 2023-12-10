@@ -3,7 +3,7 @@ import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
 import { Atom } from "./pieces/atom"
 import { GamePiece, PieceAtom } from "./types"
-import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants"
+import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH, GameKeys } from "./constants"
 import * as AllPieces from "./pieces/pieces"
 import { generateRandomPiece } from "@/utils/pieces"
 import Game from "../app/game/page"
@@ -186,7 +186,7 @@ function Viewport(props: ViewportProps) {
 
     const handleKeydown = (ev: KeyboardEvent) => {
       console.log("EV KEY", ev.key)
-      if (ev.key === "ArrowLeft") {
+      if (ev.key === GameKeys.ArrowLeft) {
         const pieceHitsLeftBorder = checkIfPieceHitsLeftBorder(currentPieceInViewport)
         if (pieceHitsLeftBorder) return
 
@@ -201,7 +201,7 @@ function Viewport(props: ViewportProps) {
         if (pieceHasHitOtherPieces) return
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowRight") {
+      } else if (ev.key === GameKeys.ArrowRight) {
         const pieceHitsRightBorder = checkIfPieceHitsRightBorder(currentPieceInViewport)
         if (pieceHitsRightBorder) return
 
@@ -216,7 +216,7 @@ function Viewport(props: ViewportProps) {
         if (pieceHasHitOtherPieces) return
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowDown") {
+      } else if (ev.key === GameKeys.ArrowDown) {
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
           y: currentPieceInViewport.y + 1,
@@ -228,7 +228,7 @@ function Viewport(props: ViewportProps) {
         if (pieceHasHitOtherPieces) return currentPieceInViewport
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowUp") {
+      } else if (ev.key === GameKeys.ArrowUp) {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
           piece: {
@@ -245,7 +245,7 @@ function Viewport(props: ViewportProps) {
         }
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === " ") {
+      } else if (ev.key === GameKeys.Space) {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
           y: currentPieceInViewport.y + 1,
