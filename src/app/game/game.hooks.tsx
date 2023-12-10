@@ -9,6 +9,6 @@ export const useGame = (): useGameStore => {
   useEffect(() => {}, []);
 
   return {
-    currentPiece: <Piece variant="position1" />,
+    currentPiece: <Piece variant="position1" atoms={[]} />,
   };
 };
