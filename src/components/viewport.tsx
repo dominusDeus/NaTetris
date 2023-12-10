@@ -23,9 +23,9 @@ function getAtomsDimensions(atoms: PieceAtom[]) {
   }
 }
 
-function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
-  const pieceHeight = getAtomsDimensions(currentPiece.piece.atoms).height
-  return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight
+function checkIfPieceHitsBottom(piece: GamePiece): boolean {
+  const pieceHeight = getAtomsDimensions(piece.piece.atoms).height
+  return piece.y + pieceHeight === VIEWPORT_HEIGHT
 }
 
 function checkIfPieceHitsLeftBorder(piece: GamePiece) {
