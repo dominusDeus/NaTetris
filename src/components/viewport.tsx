@@ -40,7 +40,7 @@ function checkIfPieceHitsRightBorder(piece: GamePiece) {
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
 function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
-  return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1)
+  return otherAtoms.some((currentAtom) => atom.x === currentAtom.x && atom.y === currentAtom.y)
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
@@ -181,6 +181,25 @@ function Viewport(props: ViewportProps) {
     ],
   )
 
+  const moveCurrentPieceDown1 = useCallback(() => {
+    const futurePieceInViewport = {
+      ...currentPieceInViewport,
+      y: currentPieceInViewport.y + 1,
+    }
+
+    const futurePieceHitsOtherPieces = checkIfPieceHitsOtherPieces(
+      { ...futurePieceInViewport, y: futurePieceInViewport.y + 1 },
+      currentGameState,
+    )
+    const futurePieceHitsBottom = checkIfPieceHitsBottom(futurePieceInViewport)
+    if (futurePieceHitsOtherPieces || futurePieceHitsBottom) {
+      addPieceToGameState(futurePieceInViewport)
+      return
+    }
+
+    onCurrentPieceChange?.(futurePieceInViewport)
+  }, [addPieceToGameState, currentGameState, currentPieceInViewport, onCurrentPieceChange])
+
   useEffect(() => {
     if (gameOver) return
 
@@ -217,17 +236,7 @@ function Viewport(props: ViewportProps) {
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === GameKeys.ArrowDown) {
-        const futureCurrentPieceInViewport: GamePiece = {
-          ...currentPieceInViewport,
-          y: currentPieceInViewport.y + 1,
-        }
-        const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-          futureCurrentPieceInViewport,
-          currentGameState,
-        )
-        if (pieceHasHitOtherPieces) return currentPieceInViewport
-
-        onCurrentPieceChange?.(futureCurrentPieceInViewport)
+        moveCurrentPieceDown1()
       } else if (ev.key === GameKeys.ArrowUp) {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
@@ -246,20 +255,20 @@ function Viewport(props: ViewportProps) {
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === GameKeys.Space) {
-        const futureCurrentPieceInViewport = {
-          ...currentPieceInViewport,
-          y: currentPieceInViewport.y + 1,
-        }
+        for (let i = currentPieceInViewport.y + 1; i <= VIEWPORT_HEIGHT; i++) {
+          const futureCurrentPieceInViewport = {
+            ...currentPieceInViewport,
+            y: i,
+          }
 
-        while (futureCurrentPieceInViewport.y <= VIEWPORT_HEIGHT) {
-          const hit =
-            checkIfPieceHitsOtherPieces(futureCurrentPieceInViewport, currentGameState) ||
-            checkIfPieceHitsBottom(futureCurrentPieceInViewport)
-          if (hit) {
+          const futurePieceHitsOtherPieces =
+            checkIfPieceHitsOtherPieces(
+              { ...futureCurrentPieceInViewport, y: futureCurrentPieceInViewport.y + 1 },
+              currentGameState,
+            ) || checkIfPieceHitsBottom(futureCurrentPieceInViewport)
+          if (futurePieceHitsOtherPieces) {
             addPieceToGameState(futureCurrentPieceInViewport)
             break
-          } else {
-            futureCurrentPieceInViewport.y += 1
           }
         }
       }
@@ -273,6 +282,7 @@ function Viewport(props: ViewportProps) {
     currentGameState,
     currentPieceInViewport,
     gameOver,
+    moveCurrentPieceDown1,
     onCurrentPieceChange,
   ])
 
@@ -280,7 +290,6 @@ function Viewport(props: ViewportProps) {
   useEffect(() => {
     if (gameOver) return
 
-    console.log(currentGameState)
     const heightIsFull = currentGameState.some((atom) => atom.y === 0)
     if (heightIsFull) {
       console.log("GAME OVER")
@@ -289,33 +298,11 @@ function Viewport(props: ViewportProps) {
     }
 
     const interval = setInterval(() => {
-      const newY = currentPieceInViewport.y + 1
-      onCurrentPieceChange?.({
-        ...currentPieceInViewport,
-        y: newY,
-      })
+      moveCurrentPieceDown1()
     }, REFRESH_RATE)
 
     return () => clearInterval(interval)
-  }, [currentGameState, currentPieceInViewport, gameOver, onCurrentPieceChange])
-
-  // Hit
-  useEffect(() => {
-    if (gameOver) return
-
-    const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-      currentPieceInViewport,
-      currentGameState,
-    )
-    if (pieceHasHitOtherPieces) {
-      addPieceToGameState(currentPieceInViewport)
-    }
-
-    const pieceHitsBottom = checkIfPieceHitsBottom(currentPieceInViewport)
-    if (pieceHitsBottom) {
-      addPieceToGameState(currentPieceInViewport)
-    }
-  }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver])
+  }, [currentGameState, gameOver, moveCurrentPieceDown1])
 
   return (
     <div className="relative box-content flex h-[800px] w-[400px] items-center justify-center border-4 border-solid border-gray-600 bg-black">
