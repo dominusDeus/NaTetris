@@ -28,6 +28,11 @@ function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
   return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight
 }
 
+function checkIfPieceHitsRightBorder(piece: GamePiece) {
+  const { width: pieceWidth } = getAtomsDimensions(piece.piece.atoms)
+  return piece.x + pieceWidth >= VIEWPORT_WIDTH
+}
+
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
 function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
@@ -196,6 +201,9 @@ function Viewport(props: ViewportProps) {
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === "ArrowRight") {
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(currentPieceInViewport)
+        if (pieceHitsRightBorder) return
+
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
           x: currentPieceInViewport.x + 1,
@@ -205,12 +213,6 @@ function Viewport(props: ViewportProps) {
           currentGameState,
         )
         if (pieceHasHitOtherPieces) return
-
-        const hasHitBorder = currentPieceInViewport.piece.atoms.some((atom) => {
-          const atomNextX = currentPieceInViewport.x + atom.x + 1
-          return atomNextX >= VIEWPORT_WIDTH
-        })
-        if (hasHitBorder) return
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === "ArrowDown") {
@@ -233,10 +235,10 @@ function Viewport(props: ViewportProps) {
             atoms: rotateAtomsToTheRight(currentPieceInViewport.piece.atoms),
           },
         }
-        const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
 
-        const hasHitBorder = currentPieceInViewport.x + pieceWidth >= VIEWPORT_WIDTH
-        if (hasHitBorder) {
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(futureCurrentPieceInViewport)
+        if (pieceHitsRightBorder) {
+          const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
           const exceedingWidth = futureCurrentPieceInViewport.x + pieceWidth - VIEWPORT_WIDTH
           futureCurrentPieceInViewport.x -= exceedingWidth
         }
