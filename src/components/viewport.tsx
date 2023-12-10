@@ -323,7 +323,6 @@ function Viewport(props: ViewportProps) {
           top: currentPieceInViewport.y * PIXEL_SIZE,
           left: currentPieceInViewport.x * PIXEL_SIZE,
         }}
-        variant="position1"
         color={currentPieceInViewport.piece.color}
       />
 
