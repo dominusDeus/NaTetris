@@ -8,9 +8,14 @@ export type Dimensions = {
   width: number;
 };
 
+export type PieceStructure = {
+  color: string;
+  atoms: PieceAtom[];
+};
+
 export type PieceAtom = Coords & {};
 
 export type GamePiece = Coords & {
-  atoms: PieceAtom[];
+  piece: PieceStructure;
   rotation: 1 | 2 | 3 | 4;
 };

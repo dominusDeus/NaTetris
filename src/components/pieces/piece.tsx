@@ -7,6 +7,7 @@ import { PIXEL_SIZE } from "../constants";
 interface PieceProps extends CommonProps {
   atoms: PieceAtom[];
   variant?: "position1" | "position2" | "position3" | "position4" | "small";
+  color: string;
 }
 
 function getAtomsDimensions(atoms: PieceAtom[]): Dimensions {
@@ -16,7 +17,7 @@ function getAtomsDimensions(atoms: PieceAtom[]): Dimensions {
   };
 }
 
-export function Piece({ className, style, variant, atoms }: PieceProps) {
+export function Piece({ className, style, variant, atoms, color }: PieceProps) {
   if (variant === "small") {
     return (
       <div className="flex flex-col">
@@ -35,13 +36,17 @@ export function Piece({ className, style, variant, atoms }: PieceProps) {
   const { height } = getAtomsDimensions(atoms);
 
   return (
-    <div className={twMerge(className)} style={{ minHeight: height * PIXEL_SIZE, ...style }}>
+    <div
+      className={twMerge(className)}
+      style={{ minHeight: height * PIXEL_SIZE, ...style }}
+    >
       <div className="relative">
         {atoms.map((atom, i) => (
           <Atom
-            className="absolute bg-orange-300"
+            className="absolute"
             key={i}
             style={{
+              backgroundColor: color,
               top: atom.y * PIXEL_SIZE,
               left: atom.x * PIXEL_SIZE,
             }}
