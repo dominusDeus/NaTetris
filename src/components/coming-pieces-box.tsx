@@ -1,22 +1,21 @@
-import { twMerge } from "tailwind-merge";
-import Piece from "./pieces/piece";
-import { I_PIECE_ATOMS, L_PIECE_ATOMS, O_PIECE_ATOMS } from "./pieces/pieces";
-import { GamePiece } from "./types";
+import { twMerge } from "tailwind-merge"
+import Piece from "./pieces/piece"
+import { GamePiece } from "./types"
 
 interface ComingPiecesBoxProps {
-  pieces: ComingPieces;
+  pieces: ComingPieces
 }
 
 export interface ComingPieces {
-  piece1: GamePiece;
-  piece2: GamePiece;
-  piece3: GamePiece;
+  piece1: GamePiece
+  piece2: GamePiece
+  piece3: GamePiece
 }
 
 const ComingPiecesBox = ({ pieces }: ComingPiecesBoxProps) => {
   return (
-    <div className="relative h-[380px] bg-black w-[200px] flex flex-col items-center gap-4 border-4 border-gray-600 border-solid">
-      <p className="text-gray-300 py-5 text-2xl text-center">NEXT</p>
+    <div className="relative flex h-[380px] w-[200px] flex-col items-center gap-4 border-4 border-solid border-gray-600 bg-black">
+      <p className="py-5 text-center text-2xl text-gray-300">NEXT</p>
       <Piece
         atoms={pieces.piece1.piece.atoms}
         className={twMerge("scale-75")}
@@ -33,7 +32,7 @@ const ComingPiecesBox = ({ pieces }: ComingPiecesBoxProps) => {
         color={pieces.piece3.piece.color}
       />
     </div>
-  );
-};
+  )
+}
 
-export default ComingPiecesBox;
+export default ComingPiecesBox
