@@ -5,23 +5,9 @@ import { Atom } from "./pieces/atom";
 import { GamePiece, PieceAtom } from "./types";
 import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants";
 import * as AllPieces from "./pieces/pieces";
-
-function x() {
-  //TODO: WORK PROBABILITIES
-  return Math.round(Math.random() * 10) % 7;
-}
-
-function generateRandomPiece(): GamePiece {
-  const pieces = Object.values(AllPieces);
-  const randomNumber = x();
-
-  return {
-    rotation: 1,
-    piece: pieces[randomNumber],
-    x: 0, // TODO: center;
-    y: 0,
-  };
-}
+import { generateRandomPiece } from "@/utils/pieces";
+import Game from "../app/game/page";
+import { ComingPieces } from "./coming-pieces-box";
 
 function getAtomsDimensions(atoms: PieceAtom[]) {
   const pieceSortedByHeight = atoms.toSorted((a, b) => {
@@ -128,11 +114,18 @@ function removeCompletedLines(gameState: PieceAtom[]): PieceAtom[] {
     .flat();
 }
 
-function Viewport() {
+interface ViewportProps {
+  comingPieces: ComingPieces;
+  currentPieceInViewport: GamePiece;
+  onComingPiecesChange?: (comingPieces: ComingPieces) => void;
+  onCurrentPieceChange?: (piece: GamePiece) => void;
+}
+
+function Viewport(props: ViewportProps) {
+  const { comingPieces, currentPieceInViewport, onComingPiecesChange, onCurrentPieceChange } =
+    props;
+
   const [gameOver, setGameOver] = useState(false);
-  const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() =>
-    generateRandomPiece(),
-  );
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([]);
 
   const addPieceToGameState = useCallback(
@@ -146,9 +139,21 @@ function Viewport() {
       ];
 
       setCurrentGameState(removeCompletedLines(newGameState));
-      setCurrentPiece(generateRandomPiece());
+      onCurrentPieceChange?.(comingPieces.piece1);
+      onComingPiecesChange?.({
+        piece1: comingPieces.piece2,
+        piece2: comingPieces.piece3,
+        piece3: generateRandomPiece(),
+      });
     },
-    [currentGameState],
+    [
+      comingPieces.piece1,
+      comingPieces.piece2,
+      comingPieces.piece3,
+      currentGameState,
+      onComingPiecesChange,
+      onCurrentPieceChange,
+    ],
   );
 
   useEffect(() => {
@@ -173,7 +178,7 @@ function Viewport() {
         });
         if (hasHitBorder) return;
 
-        setCurrentPiece(futureCurrentPieceInViewport);
+        onCurrentPieceChange?.(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowRight") {
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
@@ -191,7 +196,7 @@ function Viewport() {
         });
         if (hasHitBorder) return;
 
-        setCurrentPiece(futureCurrentPieceInViewport);
+        onCurrentPieceChange?.(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowDown") {
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
@@ -203,7 +208,7 @@ function Viewport() {
         );
         if (pieceHasHitOtherPieces) return currentPieceInViewport;
 
-        setCurrentPiece(futureCurrentPieceInViewport);
+        onCurrentPieceChange?.(futureCurrentPieceInViewport);
       } else if (ev.key === "ArrowUp") {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
@@ -220,7 +225,7 @@ function Viewport() {
           futureCurrentPieceInViewport.x -= exceedingWidth;
         }
 
-        setCurrentPiece(futureCurrentPieceInViewport);
+        onCurrentPieceChange?.(futureCurrentPieceInViewport);
       } else if (ev.key === " ") {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
@@ -244,7 +249,13 @@ function Viewport() {
     addEventListener("keydown", handleKeydown);
 
     return () => removeEventListener("keydown", handleKeydown);
-  }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver]);
+  }, [
+    addPieceToGameState,
+    currentGameState,
+    currentPieceInViewport,
+    gameOver,
+    onCurrentPieceChange,
+  ]);
 
   // Game loop
   useEffect(() => {
@@ -259,17 +270,15 @@ function Viewport() {
     }
 
     const interval = setInterval(() => {
-      setCurrentPiece((v) => {
-        const newY = v.y + 1;
-        return {
-          ...v,
-          y: newY,
-        };
+      const newY = currentPieceInViewport.y + 1;
+      onCurrentPieceChange?.({
+        ...currentPieceInViewport,
+        y: newY,
       });
     }, REFRESH_RATE);
 
     return () => clearInterval(interval);
-  }, [currentGameState, gameOver]);
+  }, [currentGameState, currentPieceInViewport, gameOver, onCurrentPieceChange]);
 
   // Hit
   useEffect(() => {

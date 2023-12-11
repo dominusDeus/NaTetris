@@ -33,12 +33,16 @@ export function Piece({ className, style, variant, atoms, color }: PieceProps) {
     );
   }
 
-  const { height } = getAtomsDimensions(atoms);
+  const { height, width } = getAtomsDimensions(atoms);
 
   return (
     <div
       className={twMerge(className)}
-      style={{ minHeight: height * PIXEL_SIZE, ...style }}
+      style={{
+        minHeight: height * PIXEL_SIZE,
+        minWidth: width * PIXEL_SIZE,
+        ...style,
+      }}
     >
       <div className="relative">
         {atoms.map((atom, i) => (
