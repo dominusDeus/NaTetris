@@ -204,7 +204,6 @@ function Viewport(props: ViewportProps) {
     if (gameOver) return
 
     const handleKeydown = (ev: KeyboardEvent) => {
-      console.log("EV KEY", ev.key)
       if (ev.key === GameKeys.ArrowLeft) {
         const pieceHitsLeftBorder = checkIfPieceHitsLeftBorder(currentPieceInViewport)
         if (pieceHitsLeftBorder) return
@@ -290,19 +289,21 @@ function Viewport(props: ViewportProps) {
   useEffect(() => {
     if (gameOver) return
 
-    const heightIsFull = currentGameState.some((atom) => atom.y === 0)
-    if (heightIsFull) {
-      console.log("GAME OVER")
-      setGameOver(true)
-      return
-    }
-
     const interval = setInterval(() => {
       moveCurrentPieceDown1()
     }, REFRESH_RATE)
 
     return () => clearInterval(interval)
-  }, [currentGameState, gameOver, moveCurrentPieceDown1])
+  }, [gameOver, moveCurrentPieceDown1])
+
+  useEffect(() => {
+    const heightIsFull = currentGameState.some((atom) => atom.y === 1)
+    if (heightIsFull) {
+      console.log("GAME OVER")
+      setGameOver(true)
+      return
+    }
+  }, [currentGameState])
 
   return (
     <div className="relative box-content flex h-[800px] w-[400px] items-center justify-center border-4 border-solid border-gray-600 bg-black">
