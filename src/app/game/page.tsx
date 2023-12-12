@@ -7,7 +7,7 @@ import Viewport from "@/components/viewport"
 import { generateRandomPiece } from "@/utils/pieces"
 import { useState } from "react"
 
-const Game = () => {
+function Game() {
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
   const [comingPieces, setComingPieces] = useState<ComingPieces>(() => ({
     piece1: generateRandomPiece(),

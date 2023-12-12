@@ -3,7 +3,7 @@ import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
 import { Atom } from "./pieces/atom"
 import { GamePiece, PieceAtom } from "./types"
-import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH } from "./constants"
+import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH, GameKeys } from "./constants"
 import * as AllPieces from "./pieces/pieces"
 import { generateRandomPiece } from "@/utils/pieces"
 import Game from "../app/game/page"
@@ -23,15 +23,24 @@ function getAtomsDimensions(atoms: PieceAtom[]) {
   }
 }
 
-function checkIfPieceHitsBottom(currentPiece: GamePiece): boolean {
-  const pieceHeight = getAtomsDimensions(currentPiece.piece.atoms).height
-  return currentPiece.y === VIEWPORT_HEIGHT - pieceHeight
+function checkIfPieceHitsBottom(piece: GamePiece): boolean {
+  const pieceHeight = getAtomsDimensions(piece.piece.atoms).height
+  return piece.y + pieceHeight === VIEWPORT_HEIGHT
+}
+
+function checkIfPieceHitsLeftBorder(piece: GamePiece) {
+  return piece.x === 0
+}
+
+function checkIfPieceHitsRightBorder(piece: GamePiece) {
+  const { width: pieceWidth } = getAtomsDimensions(piece.piece.atoms)
+  return piece.x + pieceWidth >= VIEWPORT_WIDTH
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
 // Then the function should be refactored to only to the task inside the array.
 function checkIfAtomCollidesWithOtherAtoms(atom: PieceAtom, otherAtoms: PieceAtom[]): boolean {
-  return otherAtoms.some((currentAtom) => currentAtom.x === atom.x && currentAtom.y === atom.y + 1)
+  return otherAtoms.some((currentAtom) => atom.x === currentAtom.x && atom.y === currentAtom.y)
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
@@ -96,7 +105,7 @@ function repositionAtomsBelowY(atoms: PieceAtom[], y: number): PieceAtom[] {
   })
 }
 
-const isLineComplete = (lineAtoms: PieceAtom[]): boolean => {
+function isLineComplete(lineAtoms: PieceAtom[]): boolean {
   return lineAtoms.length === VIEWPORT_WIDTH
 }
 
@@ -172,12 +181,33 @@ function Viewport(props: ViewportProps) {
     ],
   )
 
+  const moveCurrentPieceDown1 = useCallback(() => {
+    const futurePieceInViewport = {
+      ...currentPieceInViewport,
+      y: currentPieceInViewport.y + 1,
+    }
+
+    const futurePieceHitsOtherPieces = checkIfPieceHitsOtherPieces(
+      { ...futurePieceInViewport, y: futurePieceInViewport.y + 1 },
+      currentGameState,
+    )
+    const futurePieceHitsBottom = checkIfPieceHitsBottom(futurePieceInViewport)
+    if (futurePieceHitsOtherPieces || futurePieceHitsBottom) {
+      addPieceToGameState(futurePieceInViewport)
+      return
+    }
+
+    onCurrentPieceChange?.(futurePieceInViewport)
+  }, [addPieceToGameState, currentGameState, currentPieceInViewport, onCurrentPieceChange])
+
   useEffect(() => {
     if (gameOver) return
 
     const handleKeydown = (ev: KeyboardEvent) => {
-      console.log("EV KEY", ev.key)
-      if (ev.key === "ArrowLeft") {
+      if (ev.key === GameKeys.ArrowLeft) {
+        const pieceHitsLeftBorder = checkIfPieceHitsLeftBorder(currentPieceInViewport)
+        if (pieceHitsLeftBorder) return
+
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
           x: currentPieceInViewport.x - 1,
@@ -188,14 +218,11 @@ function Viewport(props: ViewportProps) {
         )
         if (pieceHasHitOtherPieces) return
 
-        const hasHitBorder = futureCurrentPieceInViewport.piece.atoms.some((atom) => {
-          const atomNextX = futureCurrentPieceInViewport.x + atom.x
-          return atomNextX < 0
-        })
-        if (hasHitBorder) return
-
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowRight") {
+      } else if (ev.key === GameKeys.ArrowRight) {
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(currentPieceInViewport)
+        if (pieceHitsRightBorder) return
+
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
           x: currentPieceInViewport.x + 1,
@@ -206,26 +233,10 @@ function Viewport(props: ViewportProps) {
         )
         if (pieceHasHitOtherPieces) return
 
-        const hasHitBorder = currentPieceInViewport.piece.atoms.some((atom) => {
-          const atomNextX = currentPieceInViewport.x + atom.x + 1
-          return atomNextX >= VIEWPORT_WIDTH
-        })
-        if (hasHitBorder) return
-
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowDown") {
-        const futureCurrentPieceInViewport: GamePiece = {
-          ...currentPieceInViewport,
-          y: currentPieceInViewport.y + 1,
-        }
-        const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-          futureCurrentPieceInViewport,
-          currentGameState,
-        )
-        if (pieceHasHitOtherPieces) return currentPieceInViewport
-
-        onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === "ArrowUp") {
+      } else if (ev.key === GameKeys.ArrowDown) {
+        moveCurrentPieceDown1()
+      } else if (ev.key === GameKeys.ArrowUp) {
         const futureCurrentPieceInViewport = {
           ...currentPieceInViewport,
           piece: {
@@ -233,30 +244,30 @@ function Viewport(props: ViewportProps) {
             atoms: rotateAtomsToTheRight(currentPieceInViewport.piece.atoms),
           },
         }
-        const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
 
-        const hasHitBorder = currentPieceInViewport.x + pieceWidth >= VIEWPORT_WIDTH
-        if (hasHitBorder) {
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(futureCurrentPieceInViewport)
+        if (pieceHitsRightBorder) {
+          const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
           const exceedingWidth = futureCurrentPieceInViewport.x + pieceWidth - VIEWPORT_WIDTH
           futureCurrentPieceInViewport.x -= exceedingWidth
         }
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
-      } else if (ev.key === " ") {
-        const futureCurrentPieceInViewport = {
-          ...currentPieceInViewport,
-          y: currentPieceInViewport.y + 1,
-        }
+      } else if (ev.key === GameKeys.Space) {
+        for (let i = currentPieceInViewport.y + 1; i <= VIEWPORT_HEIGHT; i++) {
+          const futureCurrentPieceInViewport = {
+            ...currentPieceInViewport,
+            y: i,
+          }
 
-        while (futureCurrentPieceInViewport.y <= VIEWPORT_HEIGHT) {
-          const hit =
-            checkIfPieceHitsOtherPieces(futureCurrentPieceInViewport, currentGameState) ||
-            checkIfPieceHitsBottom(futureCurrentPieceInViewport)
-          if (hit) {
+          const futurePieceHitsOtherPieces =
+            checkIfPieceHitsOtherPieces(
+              { ...futureCurrentPieceInViewport, y: futureCurrentPieceInViewport.y + 1 },
+              currentGameState,
+            ) || checkIfPieceHitsBottom(futureCurrentPieceInViewport)
+          if (futurePieceHitsOtherPieces) {
             addPieceToGameState(futureCurrentPieceInViewport)
             break
-          } else {
-            futureCurrentPieceInViewport.y += 1
           }
         }
       }
@@ -270,6 +281,7 @@ function Viewport(props: ViewportProps) {
     currentGameState,
     currentPieceInViewport,
     gameOver,
+    moveCurrentPieceDown1,
     onCurrentPieceChange,
   ])
 
@@ -277,42 +289,21 @@ function Viewport(props: ViewportProps) {
   useEffect(() => {
     if (gameOver) return
 
-    console.log(currentGameState)
-    const heightIsFull = currentGameState.some((atom) => atom.y === 0)
+    const interval = setInterval(() => {
+      moveCurrentPieceDown1()
+    }, REFRESH_RATE)
+
+    return () => clearInterval(interval)
+  }, [gameOver, moveCurrentPieceDown1])
+
+  useEffect(() => {
+    const heightIsFull = currentGameState.some((atom) => atom.y === 1)
     if (heightIsFull) {
       console.log("GAME OVER")
       setGameOver(true)
       return
     }
-
-    const interval = setInterval(() => {
-      const newY = currentPieceInViewport.y + 1
-      onCurrentPieceChange?.({
-        ...currentPieceInViewport,
-        y: newY,
-      })
-    }, REFRESH_RATE)
-
-    return () => clearInterval(interval)
-  }, [currentGameState, currentPieceInViewport, gameOver, onCurrentPieceChange])
-
-  // Hit
-  useEffect(() => {
-    if (gameOver) return
-
-    const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
-      currentPieceInViewport,
-      currentGameState,
-    )
-    if (pieceHasHitOtherPieces) {
-      addPieceToGameState(currentPieceInViewport)
-    }
-
-    const pieceHitsBottom = checkIfPieceHitsBottom(currentPieceInViewport)
-    if (pieceHitsBottom) {
-      addPieceToGameState(currentPieceInViewport)
-    }
-  }, [addPieceToGameState, currentGameState, currentPieceInViewport, gameOver])
+  }, [currentGameState])
 
   return (
     <div className="relative box-content flex h-[800px] w-[400px] items-center justify-center border-4 border-solid border-gray-600 bg-black">
@@ -323,7 +314,6 @@ function Viewport(props: ViewportProps) {
           top: currentPieceInViewport.y * PIXEL_SIZE,
           left: currentPieceInViewport.x * PIXEL_SIZE,
         }}
-        variant="position1"
         color={currentPieceInViewport.piece.color}
       />
 

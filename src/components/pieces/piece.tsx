@@ -6,7 +6,6 @@ import { PIXEL_SIZE } from "../constants"
 
 interface PieceProps extends CommonProps {
   atoms: PieceAtom[]
-  variant?: "position1" | "position2" | "position3" | "position4" | "small"
   color: string
 }
 
@@ -17,22 +16,7 @@ function getAtomsDimensions(atoms: PieceAtom[]): Dimensions {
   }
 }
 
-export function Piece({ className, style, variant, atoms, color }: PieceProps) {
-  if (variant === "small") {
-    return (
-      <div className="flex flex-col">
-        <div className="flex">
-          <div className="h-6 w-6 border border-solid border-gray-500 bg-orange-300"></div>
-        </div>
-        <div className="flex">
-          <div className="h-6 w-6 border border-solid border-gray-500 bg-orange-300"></div>
-          <div className="h-6 w-6 border border-solid border-gray-500 bg-orange-300"></div>
-          <div className="h-6 w-6 border border-solid border-gray-500 bg-orange-300"></div>
-        </div>
-      </div>
-    )
-  }
-
+export function Piece({ className, style, atoms, color }: PieceProps) {
   const { height, width } = getAtomsDimensions(atoms)
 
   return (
