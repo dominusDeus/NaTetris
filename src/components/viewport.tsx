@@ -152,6 +152,7 @@ function Viewport(props: ViewportProps) {
 
   const [gameOver, setGameOver] = useState(false)
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
+  const [shadowPiece, setShadowPiece] = useState<GamePiece>()
 
   const addPieceToGameState = useCallback(
     (piece: GamePiece) => {
@@ -180,6 +181,31 @@ function Viewport(props: ViewportProps) {
       onCurrentPieceChange,
     ],
   )
+
+  const getBottomShadowOfCurrentPiece = useCallback(() => {
+    for (let i = currentPieceInViewport.y + 1; i <= VIEWPORT_HEIGHT; i++) {
+      const futureCurrentPieceInViewport = {
+        ...currentPieceInViewport,
+        y: i,
+      }
+
+      const futurePieceHitsOtherPieces =
+        checkIfPieceHitsOtherPieces(
+          { ...futureCurrentPieceInViewport, y: futureCurrentPieceInViewport.y + 1 },
+          currentGameState,
+        ) || checkIfPieceHitsBottom(futureCurrentPieceInViewport)
+      if (futurePieceHitsOtherPieces) {
+        setShadowPiece({
+          ...futureCurrentPieceInViewport,
+          piece: {
+            ...futureCurrentPieceInViewport.piece,
+            color: "#000",
+          },
+        })
+        break
+      }
+    }
+  }, [currentGameState, currentPieceInViewport])
 
   const moveCurrentPieceDown1 = useCallback(() => {
     const futurePieceInViewport = {
@@ -292,9 +318,9 @@ function Viewport(props: ViewportProps) {
     const interval = setInterval(() => {
       moveCurrentPieceDown1()
     }, REFRESH_RATE)
-
+    getBottomShadowOfCurrentPiece()
     return () => clearInterval(interval)
-  }, [gameOver, moveCurrentPieceDown1])
+  }, [gameOver, getBottomShadowOfCurrentPiece, moveCurrentPieceDown1])
 
   useEffect(() => {
     const heightIsFull = currentGameState.some((atom) => atom.y === 1)
@@ -309,7 +335,7 @@ function Viewport(props: ViewportProps) {
     <div className="relative box-content flex h-[800px] w-[400px] items-center justify-center border-4 border-solid border-gray-600 bg-black">
       <Piece
         atoms={currentPieceInViewport.piece.atoms}
-        className={twMerge("absolute")}
+        className={twMerge("absolute z-50")}
         style={{
           top: currentPieceInViewport.y * PIXEL_SIZE,
           left: currentPieceInViewport.x * PIXEL_SIZE,
@@ -327,6 +353,17 @@ function Viewport(props: ViewportProps) {
           }}
         />
       ))}
+      {shadowPiece && (
+        <Piece
+          atoms={shadowPiece.piece.atoms}
+          className={twMerge("absolute z-10")}
+          style={{
+            top: shadowPiece.y * PIXEL_SIZE,
+            left: shadowPiece.x * PIXEL_SIZE,
+          }}
+          color={shadowPiece.piece.color}
+        />
+      )}
     </div>
   )
 }
