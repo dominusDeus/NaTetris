@@ -1,5 +1,6 @@
 "use client"
 
+import { Box } from "@/components/box"
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
@@ -15,6 +16,7 @@ function Game() {
     piece2: generateRandomPiece(),
     piece3: generateRandomPiece(),
   }))
+
   const [holdBoxPiece, setHoldBoxPiece] = useState<GamePiece>(() => generateRandomPiece())
 
   return (
@@ -22,13 +24,18 @@ function Game() {
       <div className="mt-20 self-start">
         <HoldBox />
       </div>
-      <Viewport
-        comingPieces={comingPieces}
-        currentPieceInViewport={currentPieceInViewport}
-        onComingPiecesChange={setComingPieces}
-        onCurrentPieceChange={setCurrentPiece}
-        width={VIEWPORT_WIDTH * 2}
-      />
+      <Box
+        className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
+        width={VIEWPORT_WIDTH}
+      >
+        <Viewport
+          comingPieces={comingPieces}
+          currentPieceInViewport={currentPieceInViewport}
+          onComingPiecesChange={setComingPieces}
+          onCurrentPieceChange={setCurrentPiece}
+          width={VIEWPORT_WIDTH * 2}
+        />
+      </Box>
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />
       </div>

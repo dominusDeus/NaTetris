@@ -6,6 +6,7 @@ import { GamePiece, PieceAtom } from "./types"
 import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, GameKeys } from "./constants"
 import { generateRandomPiece } from "@/utils/pieces"
 import { ComingPieces } from "./coming-pieces-box"
+import { Box } from "./box"
 
 function getAtomsDimensions(atoms: PieceAtom[]) {
   const pieceSortedByHeight = atoms.toSorted((a, b) => {
@@ -342,40 +343,29 @@ function Viewport(props: ViewportProps) {
   }, [currentGameState])
 
   return (
-    <div
-      className="relative box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
-      style={{ width: PIXEL_SIZE * width + "px" }}
-    >
-      <Piece
-        atoms={currentPieceInViewport.piece.atoms}
-        className={twMerge("absolute z-50")}
-        style={{
-          top: currentPieceInViewport.y * PIXEL_SIZE,
-          left: currentPieceInViewport.x * PIXEL_SIZE,
-        }}
-        color={currentPieceInViewport.piece.color}
-      />
+    <div className="relative h-full w-full">
+      <Box.Place {...currentPieceInViewport}>
+        <Piece
+          atoms={currentPieceInViewport.piece.atoms}
+          className={twMerge("z-50")}
+          color={currentPieceInViewport.piece.color}
+        />
+      </Box.Place>
 
       {currentGameState.map((atom, i) => (
-        <Atom
-          className={twMerge("absolute bg-orange-300")}
-          key={i}
-          style={{
-            top: atom.y * PIXEL_SIZE,
-            left: atom.x * PIXEL_SIZE,
-          }}
-        />
+        <Box.Place {...atom} key={i}>
+          <Atom className={twMerge("bg-orange-300")} />
+        </Box.Place>
       ))}
+
       {shadowPiece && (
-        <Piece
-          atoms={shadowPiece.piece.atoms}
-          className={twMerge("absolute z-10")}
-          style={{
-            top: shadowPiece.y * PIXEL_SIZE,
-            left: shadowPiece.x * PIXEL_SIZE,
-          }}
-          color={shadowPiece.piece.color}
-        />
+        <Box.Place {...shadowPiece}>
+          <Piece
+            atoms={shadowPiece.piece.atoms}
+            className={twMerge("z-10")}
+            color={shadowPiece.piece.color}
+          />
+        </Box.Place>
       )}
     </div>
   )
