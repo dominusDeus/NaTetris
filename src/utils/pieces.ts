@@ -13,7 +13,6 @@ export function generateRandomPiece(): GamePiece {
 
   return {
     ...PIECE_INITIAL_POSITION,
-    rotation: 1,
     piece: pieces[randomNumber],
   }
 }

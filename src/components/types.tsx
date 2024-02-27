@@ -15,7 +15,7 @@ export type PieceStructure = {
 
 export type PieceAtom = Coords & {}
 
-export type GamePiece = Coords & {
+export type GamePiece = {
+  coords: Coords
   piece: PieceStructure
-  rotation: 1 | 2 | 3 | 4
 }
