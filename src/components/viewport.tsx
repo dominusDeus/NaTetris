@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { PropsWithChildren, useCallback, useEffect, useState } from "react"
 import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
 import { Atom } from "./pieces/atom"
@@ -147,8 +147,9 @@ interface ViewportProps {
   width: number
 }
 
-function Viewport(props: ViewportProps) {
+function Viewport(props: PropsWithChildren<ViewportProps>) {
   const {
+    children,
     comingPieces,
     currentPieceInViewport,
     onComingPiecesChange,
@@ -344,6 +345,8 @@ function Viewport(props: ViewportProps) {
 
   return (
     <div className="relative h-full w-full">
+      {children}
+
       <Box.Place {...currentPieceInViewport}>
         <Piece
           atoms={currentPieceInViewport.piece.atoms}
