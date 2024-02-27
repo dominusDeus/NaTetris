@@ -27,7 +27,7 @@ function Game() {
         currentPieceInViewport={currentPieceInViewport}
         onComingPiecesChange={setComingPieces}
         onCurrentPieceChange={setCurrentPiece}
-        width={VIEWPORT_WIDTH}
+        width={VIEWPORT_WIDTH * 2}
       />
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />
