@@ -1,4 +1,4 @@
-import { GamePiece } from "@/components/types"
+import { GamePiece, PieceAtom, PieceStructure } from "@/components/types"
 import * as AllPieces from "../components/pieces/pieces"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
 
@@ -15,4 +15,13 @@ export function generateRandomPiece(): GamePiece {
     ...PIECE_INITIAL_POSITION,
     piece: { ...pieces[randomNumber] },
   }
+}
+
+export function findPieceInitialPosition(piece: PieceStructure) {
+  const pieces = Object.values(AllPieces)
+  const initialPiece = pieces.find((initialPiece) => initialPiece.color === piece.color)
+  if (!initialPiece) {
+    return null
+  }
+  return initialPiece.atoms
 }

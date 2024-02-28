@@ -5,7 +5,7 @@ import { PIECE_INITIAL_POSITION } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
 import { GamePiece, PieceStructure } from "@/components/types"
 import Viewport from "@/components/viewport"
-import { generateRandomPiece } from "@/utils/pieces"
+import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { useState } from "react"
 
 function Game() {
@@ -27,7 +27,14 @@ function Game() {
         ...PIECE_INITIAL_POSITION,
         piece: { atoms: holdBoxPiece.atoms, color: holdBoxPiece.color },
       })
-      setHoldBoxPiece({ ...currentPieceInViewport.piece })
+      const holdBoxPieceInitialPosition = findPieceInitialPosition(currentPieceInViewport.piece)
+      if (!holdBoxPieceInitialPosition) {
+        throw new Error("No pieces found matching the one passed by paramater")
+      }
+      setHoldBoxPiece({
+        color: currentPieceInViewport.piece.color,
+        atoms: holdBoxPieceInitialPosition,
+      })
     }
     setSwapable(false)
   }
