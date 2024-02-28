@@ -1,4 +1,4 @@
-import { PropsWithChildren, useCallback, useEffect, useState } from "react"
+import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
 import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
 import { Atom } from "./pieces/atom"
@@ -24,16 +24,16 @@ function getAtomsDimensions(atoms: PieceAtom[]) {
 
 function checkIfPieceHitsBottom(piece: GamePiece): boolean {
   const pieceHeight = getAtomsDimensions(piece.piece.atoms).height
-  return piece.y + pieceHeight === VIEWPORT_HEIGHT
+  return piece.coords.y + pieceHeight === VIEWPORT_HEIGHT
 }
 
 function checkIfPieceHitsLeftBorder(piece: GamePiece) {
-  return piece.x === 0
+  return piece.coords.x === 0
 }
 
 function checkIfPieceHitsRightBorder(piece: GamePiece, width: number) {
   const { width: pieceWidth } = getAtomsDimensions(piece.piece.atoms)
-  return piece.x + pieceWidth >= width
+  return piece.coords.x + pieceWidth >= width
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
@@ -51,8 +51,8 @@ function checkIfPieceHitsOtherPieces(
   return currentPieceInViewport.piece.atoms.some((atom) =>
     checkIfAtomCollidesWithOtherAtoms(
       {
-        x: currentPieceInViewport.x + atom.x,
-        y: currentPieceInViewport.y + atom.y,
+        x: currentPieceInViewport.coords.x + atom.x,
+        y: currentPieceInViewport.coords.y + atom.y,
       },
       currentGameState,
     ),
@@ -140,89 +140,86 @@ function removeCompletedLines(gameState: PieceAtom[], width: number): PieceAtom[
 }
 
 interface ViewportProps {
-  comingPieces: ComingPieces
   currentPieceInViewport: GamePiece
-  onComingPiecesChange?: (comingPieces: ComingPieces) => void
   onCurrentPieceChange?: (piece: GamePiece) => void
+  onHoldBoxClick?: () => void
+  onNextStepTrigger?: () => void
   width: number
 }
 
 function Viewport(props: PropsWithChildren<ViewportProps>) {
   const {
     children,
-    comingPieces,
     currentPieceInViewport,
-    onComingPiecesChange,
+
     onCurrentPieceChange,
+    onHoldBoxClick,
+    onNextStepTrigger,
     width,
   } = props
 
   const [gameOver, setGameOver] = useState(false)
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
-  const [shadowPiece, setShadowPiece] = useState<GamePiece>()
 
   const addPieceToGameState = useCallback(
     (piece: GamePiece) => {
       const newGameState = [
         ...currentGameState,
         ...piece.piece.atoms.map((internalAtomCoords) => ({
-          x: piece.x + internalAtomCoords.x,
-          y: piece.y + internalAtomCoords.y,
+          x: piece.coords.x + internalAtomCoords.x,
+          y: piece.coords.y + internalAtomCoords.y,
         })),
       ]
 
       setCurrentGameState(removeCompletedLines(newGameState, width))
-      onCurrentPieceChange?.(comingPieces.piece1)
-      onComingPiecesChange?.({
-        piece1: comingPieces.piece2,
-        piece2: comingPieces.piece3,
-        piece3: generateRandomPiece(),
-      })
+      onNextStepTrigger?.()
     },
-    [
-      comingPieces.piece1,
-      comingPieces.piece2,
-      comingPieces.piece3,
-      currentGameState,
-      onComingPiecesChange,
-      onCurrentPieceChange,
-      width,
-    ],
+    [currentGameState, onNextStepTrigger, width],
   )
 
-  const getBottomShadowOfCurrentPiece = useCallback(() => {
-    for (let i = currentPieceInViewport.y + 1; i <= VIEWPORT_HEIGHT; i++) {
+  const shadowPiece = useMemo(() => {
+    for (let i = currentPieceInViewport.coords.y + 1; i <= VIEWPORT_HEIGHT; i++) {
       const futureCurrentPieceInViewport = {
         ...currentPieceInViewport,
-        y: i,
+        coords: {
+          ...currentPieceInViewport.coords,
+          y: i,
+        },
       }
 
       const futurePieceHitsOtherPieces =
         checkIfPieceHitsOtherPieces(
-          { ...futureCurrentPieceInViewport, y: futureCurrentPieceInViewport.y + 1 },
+          {
+            ...futureCurrentPieceInViewport,
+            coords: {
+              ...futureCurrentPieceInViewport.coords,
+              y: futureCurrentPieceInViewport.coords.y + 1,
+            },
+          },
           currentGameState,
         ) || checkIfPieceHitsBottom(futureCurrentPieceInViewport)
       if (futurePieceHitsOtherPieces) {
-        setShadowPiece({
+        return {
           ...futureCurrentPieceInViewport,
           piece: {
             ...futureCurrentPieceInViewport.piece,
             color: "#000",
           },
-        })
-        break
+        }
       }
     }
   }, [currentGameState, currentPieceInViewport])
 
   const moveCurrentPieceDown1 = useCallback(() => {
-    const futurePieceInViewport = {
+    const futurePieceInViewport: GamePiece = {
       ...currentPieceInViewport,
-      y: currentPieceInViewport.y + 1,
+      coords: { ...currentPieceInViewport.coords, y: currentPieceInViewport.coords.y + 1 },
     }
-
     const futurePieceHitsOtherPieces = checkIfPieceHitsOtherPieces(
-      { ...futurePieceInViewport, y: futurePieceInViewport.y + 1 },
+      {
+        ...futurePieceInViewport,
+        coords: { ...futurePieceInViewport.coords, y: futurePieceInViewport.coords.y + 1 },
+      },
       currentGameState,
     )
     const futurePieceHitsBottom = checkIfPieceHitsBottom(futurePieceInViewport)
@@ -244,7 +241,10 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
 
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
-          x: currentPieceInViewport.x - 1,
+          coords: {
+            ...currentPieceInViewport.coords,
+            x: currentPieceInViewport.coords.x - 1,
+          },
         }
         const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
           futureCurrentPieceInViewport,
@@ -259,7 +259,10 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
 
         const futureCurrentPieceInViewport: GamePiece = {
           ...currentPieceInViewport,
-          x: currentPieceInViewport.x + 1,
+          coords: {
+            ...currentPieceInViewport.coords,
+            x: currentPieceInViewport.coords.x + 1,
+          },
         }
         const pieceHasHitOtherPieces = checkIfPieceHitsOtherPieces(
           futureCurrentPieceInViewport,
@@ -285,21 +288,30 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
         )
         if (pieceHitsRightBorder) {
           const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
-          const exceedingWidth = futureCurrentPieceInViewport.x + pieceWidth - width
-          futureCurrentPieceInViewport.x -= exceedingWidth
+          const exceedingWidth = futureCurrentPieceInViewport.coords.x + pieceWidth - width
+          futureCurrentPieceInViewport.coords.x -= exceedingWidth
         }
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === GameKeys.Space) {
-        for (let i = currentPieceInViewport.y + 1; i <= VIEWPORT_HEIGHT; i++) {
+        for (let i = currentPieceInViewport.coords.y + 1; i <= VIEWPORT_HEIGHT; i++) {
           const futureCurrentPieceInViewport = {
             ...currentPieceInViewport,
-            y: i,
+            coords: {
+              ...currentPieceInViewport.coords,
+              y: i,
+            },
           }
 
           const futurePieceHitsOtherPieces =
             checkIfPieceHitsOtherPieces(
-              { ...futureCurrentPieceInViewport, y: futureCurrentPieceInViewport.y + 1 },
+              {
+                ...futureCurrentPieceInViewport,
+                coords: {
+                  ...futureCurrentPieceInViewport.coords,
+                  y: futureCurrentPieceInViewport.coords.y + 1,
+                },
+              },
               currentGameState,
             ) || checkIfPieceHitsBottom(futureCurrentPieceInViewport)
           if (futurePieceHitsOtherPieces) {
@@ -307,6 +319,8 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
             break
           }
         }
+      } else if (ev.key === GameKeys.Shift) {
+        onHoldBoxClick?.()
       }
     }
 
@@ -320,6 +334,7 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
     gameOver,
     moveCurrentPieceDown1,
     onCurrentPieceChange,
+    onHoldBoxClick,
     width,
   ])
 
@@ -330,9 +345,8 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
     const interval = setInterval(() => {
       moveCurrentPieceDown1()
     }, REFRESH_RATE)
-    getBottomShadowOfCurrentPiece()
     return () => clearInterval(interval)
-  }, [gameOver, getBottomShadowOfCurrentPiece, moveCurrentPieceDown1])
+  }, [gameOver, shadowPiece, moveCurrentPieceDown1])
 
   useEffect(() => {
     const heightIsFull = currentGameState.some((atom) => atom.y === 1)
@@ -344,13 +358,17 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
   }, [currentGameState])
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full" style={{ width: PIXEL_SIZE * width + "px" }}>
       {children}
 
-      <Box.Place {...currentPieceInViewport}>
+      <Box.Place {...currentPieceInViewport.coords}>
         <Piece
           atoms={currentPieceInViewport.piece.atoms}
           className={twMerge("z-50")}
+          style={{
+            top: currentPieceInViewport.coords.y * PIXEL_SIZE,
+            left: currentPieceInViewport.coords.x * PIXEL_SIZE,
+          }}
           color={currentPieceInViewport.piece.color}
         />
       </Box.Place>
@@ -362,10 +380,14 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
       ))}
 
       {shadowPiece && (
-        <Box.Place {...shadowPiece}>
+        <Box.Place {...shadowPiece.coords}>
           <Piece
             atoms={shadowPiece.piece.atoms}
             className={twMerge("z-10")}
+            style={{
+              top: shadowPiece.coords.y * PIXEL_SIZE,
+              left: shadowPiece.coords.x * PIXEL_SIZE,
+            }}
             color={shadowPiece.piece.color}
           />
         </Box.Place>

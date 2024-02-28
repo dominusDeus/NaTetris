@@ -23,7 +23,7 @@ export function Box(props: PropsWithChildren<BoxProps>) {
 
 type BoxPieceProps = CommonProps & Coords
 
-Box.Place = function Box(props: PropsWithChildren<BoxPieceProps>) {
+Box.Place = function Place(props: PropsWithChildren<BoxPieceProps>) {
   const { children, className, style, x, y } = props
 
   return (
