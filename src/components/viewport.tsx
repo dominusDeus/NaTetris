@@ -3,10 +3,8 @@ import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
 import { Atom } from "./pieces/atom"
 import { GamePiece, PieceAtom } from "./types"
-import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, VIEWPORT_WIDTH, GameKeys } from "./constants"
-import * as AllPieces from "./pieces/pieces"
+import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, GameKeys } from "./constants"
 import { generateRandomPiece } from "@/utils/pieces"
-import Game from "../app/game/page"
 import { ComingPieces } from "./coming-pieces-box"
 
 function getAtomsDimensions(atoms: PieceAtom[]) {
@@ -32,9 +30,9 @@ function checkIfPieceHitsLeftBorder(piece: GamePiece) {
   return piece.coords.x === 0
 }
 
-function checkIfPieceHitsRightBorder(piece: GamePiece) {
+function checkIfPieceHitsRightBorder(piece: GamePiece, width: number) {
   const { width: pieceWidth } = getAtomsDimensions(piece.piece.atoms)
-  return piece.coords.x + pieceWidth >= VIEWPORT_WIDTH
+  return piece.coords.x + pieceWidth >= width
 }
 
 // TODO: When a function's only purpose is to iterate over an array an do something inside that iteration
@@ -105,19 +103,19 @@ function repositionAtomsBelowY(atoms: PieceAtom[], y: number): PieceAtom[] {
   })
 }
 
-function isLineComplete(lineAtoms: PieceAtom[]): boolean {
-  return lineAtoms.length === VIEWPORT_WIDTH
+function isLineComplete(lineAtoms: PieceAtom[], width: number): boolean {
+  return lineAtoms.length === width
 }
 
-function removeCompletedLines(gameState: PieceAtom[]): PieceAtom[] {
+function removeCompletedLines(gameState: PieceAtom[], width: number): PieceAtom[] {
   const YLines = getYLinesFromCurrentGameState(gameState)
 
   const completedYLines = YLines.filter((lineAtoms) => {
-    return isLineComplete(lineAtoms)
+    return isLineComplete(lineAtoms, width)
   })
 
   const uncompletedYLines = YLines.filter((lineAtoms) => {
-    return !isLineComplete(lineAtoms)
+    return !isLineComplete(lineAtoms, width)
   })
 
   return completedYLines
@@ -145,10 +143,18 @@ interface ViewportProps {
   onCurrentPieceChange?: (piece: GamePiece) => void
   onHoldBoxClick?: () => void
   onNextStepTrigger?: () => void
+  width: number
 }
 
 function Viewport(props: ViewportProps) {
-  const { currentPieceInViewport, onCurrentPieceChange, onHoldBoxClick, onNextStepTrigger } = props
+  const {
+    currentPieceInViewport,
+
+    onCurrentPieceChange,
+    onHoldBoxClick,
+    onNextStepTrigger,
+    width,
+  } = props
 
   const [gameOver, setGameOver] = useState(false)
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
@@ -163,10 +169,10 @@ function Viewport(props: ViewportProps) {
         })),
       ]
 
-      setCurrentGameState(removeCompletedLines(newGameState))
+      setCurrentGameState(removeCompletedLines(newGameState, width))
       onNextStepTrigger?.()
     },
-    [currentGameState, onNextStepTrigger],
+    [currentGameState, onNextStepTrigger, width],
   )
 
   const shadowPiece = useMemo(() => {
@@ -246,7 +252,7 @@ function Viewport(props: ViewportProps) {
 
         onCurrentPieceChange?.(futureCurrentPieceInViewport)
       } else if (ev.key === GameKeys.ArrowRight) {
-        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(currentPieceInViewport)
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(currentPieceInViewport, width)
         if (pieceHitsRightBorder) return
 
         const futureCurrentPieceInViewport: GamePiece = {
@@ -274,10 +280,13 @@ function Viewport(props: ViewportProps) {
           },
         }
 
-        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(futureCurrentPieceInViewport)
+        const pieceHitsRightBorder = checkIfPieceHitsRightBorder(
+          futureCurrentPieceInViewport,
+          width,
+        )
         if (pieceHitsRightBorder) {
           const { width: pieceWidth } = getAtomsDimensions(futureCurrentPieceInViewport.piece.atoms)
-          const exceedingWidth = futureCurrentPieceInViewport.coords.x + pieceWidth - VIEWPORT_WIDTH
+          const exceedingWidth = futureCurrentPieceInViewport.coords.x + pieceWidth - width
           futureCurrentPieceInViewport.coords.x -= exceedingWidth
         }
 
@@ -324,6 +333,7 @@ function Viewport(props: ViewportProps) {
     moveCurrentPieceDown1,
     onCurrentPieceChange,
     onHoldBoxClick,
+    width,
   ])
 
   // Game loop
@@ -346,7 +356,10 @@ function Viewport(props: ViewportProps) {
   }, [currentGameState])
 
   return (
-    <div className="relative box-content flex h-[800px] w-[400px] items-center justify-center border-4 border-solid border-gray-600 bg-black">
+    <div
+      className="relative box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
+      style={{ width: PIXEL_SIZE * width + "px" }}
+    >
       <Piece
         atoms={currentPieceInViewport.piece.atoms}
         className={twMerge("absolute z-50")}

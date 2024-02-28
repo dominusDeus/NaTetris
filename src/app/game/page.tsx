@@ -2,6 +2,7 @@
 
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
+import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
 import { GamePiece, PieceStructure } from "@/components/types"
 import Viewport from "@/components/viewport"
@@ -59,6 +60,7 @@ function Game() {
         onCurrentPieceChange={setCurrentPiece}
         onHoldBoxClick={handleHoldBoxSwap}
         onNextStepTrigger={handleNextStepTrigger}
+        width={VIEWPORT_WIDTH}
       />
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />
