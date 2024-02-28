@@ -5,9 +5,11 @@ import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
 import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
+import Piece from "@/components/pieces/piece"
 import { GamePiece, PieceStructure } from "@/components/types"
 import Viewport from "@/components/viewport"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
+import { tw } from "@/utils/tw"
 import { useState } from "react"
 
 function Game() {
@@ -66,7 +68,15 @@ function Game() {
           onHoldBoxClick={handleHoldBoxSwap}
           onNextStepTrigger={handleNextStepTrigger}
           width={VIEWPORT_WIDTH}
-        />
+        >
+          <Box.Place {...currentPieceInViewport.coords}>
+            <Piece
+              atoms={currentPieceInViewport.piece.atoms}
+              className={tw("z-50")}
+              color={currentPieceInViewport.piece.color}
+            />
+          </Box.Place>
+        </Viewport>
       </Box>
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />
