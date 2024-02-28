@@ -1,5 +1,6 @@
 "use client"
 
+import { Box } from "@/components/box"
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
 import { VIEWPORT_WIDTH } from "@/components/constants"
@@ -55,13 +56,18 @@ function Game() {
       <div className="mt-20 self-start">
         <HoldBox holdBoxPiece={holdBoxPiece} />
       </div>
-      <Viewport
-        currentPieceInViewport={currentPieceInViewport}
-        onCurrentPieceChange={setCurrentPiece}
-        onHoldBoxClick={handleHoldBoxSwap}
-        onNextStepTrigger={handleNextStepTrigger}
+      <Box
+        className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
         width={VIEWPORT_WIDTH}
-      />
+      >
+        <Viewport
+          currentPieceInViewport={currentPieceInViewport}
+          onCurrentPieceChange={setCurrentPiece}
+          onHoldBoxClick={handleHoldBoxSwap}
+          onNextStepTrigger={handleNextStepTrigger}
+          width={VIEWPORT_WIDTH}
+        />
+      </Box>
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />
       </div>

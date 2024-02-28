@@ -346,7 +346,7 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
       moveCurrentPieceDown1()
     }, REFRESH_RATE)
     return () => clearInterval(interval)
-  }, [gameOver, shadowPiece, moveCurrentPieceDown1])
+  }, [gameOver, moveCurrentPieceDown1])
 
   useEffect(() => {
     const heightIsFull = currentGameState.some((atom) => atom.y === 1)
@@ -361,6 +361,19 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
     <div className="relative h-full w-full" style={{ width: PIXEL_SIZE * width + "px" }}>
       {children}
 
+      {shadowPiece && (
+        <Box.Place {...shadowPiece.coords}>
+          <Piece
+            atoms={shadowPiece.piece.atoms}
+            className={twMerge("z-10")}
+            style={{
+              top: shadowPiece.coords.y * PIXEL_SIZE,
+              left: shadowPiece.coords.x * PIXEL_SIZE,
+            }}
+            color={shadowPiece.piece.color}
+          />
+        </Box.Place>
+      )}
       <Box.Place {...currentPieceInViewport.coords}>
         <Piece
           atoms={currentPieceInViewport.piece.atoms}
@@ -378,20 +391,6 @@ function Viewport(props: PropsWithChildren<ViewportProps>) {
           <Atom className={twMerge("bg-orange-300")} />
         </Box.Place>
       ))}
-
-      {shadowPiece && (
-        <Box.Place {...shadowPiece.coords}>
-          <Piece
-            atoms={shadowPiece.piece.atoms}
-            className={twMerge("z-10")}
-            style={{
-              top: shadowPiece.coords.y * PIXEL_SIZE,
-              left: shadowPiece.coords.x * PIXEL_SIZE,
-            }}
-            color={shadowPiece.piece.color}
-          />
-        </Box.Place>
-      )}
     </div>
   )
 }
