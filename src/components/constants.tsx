@@ -10,4 +10,5 @@ export enum GameKeys {
   ArrowDown = "ArrowDown",
   ArrowUp = "ArrowUp",
   Space = " ",
+  Shift = "Shift",
 }

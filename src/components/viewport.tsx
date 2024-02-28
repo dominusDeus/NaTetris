@@ -141,14 +141,14 @@ function removeCompletedLines(gameState: PieceAtom[]): PieceAtom[] {
 }
 
 interface ViewportProps {
-  comingPieces: ComingPieces
   currentPieceInViewport: GamePiece
-  onComingPiecesChange?: (comingPieces: ComingPieces) => void
   onCurrentPieceChange?: (piece: GamePiece) => void
+  onHoldBoxClick?: () => void
+  onNextStepTrigger?: () => void
 }
 
 function Viewport(props: ViewportProps) {
-  const { comingPieces, currentPieceInViewport, onComingPiecesChange, onCurrentPieceChange } = props
+  const { currentPieceInViewport, onCurrentPieceChange, onHoldBoxClick, onNextStepTrigger } = props
 
   const [gameOver, setGameOver] = useState(false)
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
@@ -164,21 +164,9 @@ function Viewport(props: ViewportProps) {
       ]
 
       setCurrentGameState(removeCompletedLines(newGameState))
-      onCurrentPieceChange?.(comingPieces.piece1)
-      onComingPiecesChange?.({
-        piece1: comingPieces.piece2,
-        piece2: comingPieces.piece3,
-        piece3: generateRandomPiece(),
-      })
+      onNextStepTrigger?.()
     },
-    [
-      comingPieces.piece1,
-      comingPieces.piece2,
-      comingPieces.piece3,
-      currentGameState,
-      onComingPiecesChange,
-      onCurrentPieceChange,
-    ],
+    [currentGameState, onNextStepTrigger],
   )
 
   const shadowPiece = useMemo(() => {
@@ -219,7 +207,6 @@ function Viewport(props: ViewportProps) {
       ...currentPieceInViewport,
       coords: { ...currentPieceInViewport.coords, y: currentPieceInViewport.coords.y + 1 },
     }
-    console.log(futurePieceInViewport)
     const futurePieceHitsOtherPieces = checkIfPieceHitsOtherPieces(
       {
         ...futurePieceInViewport,
@@ -321,6 +308,8 @@ function Viewport(props: ViewportProps) {
             break
           }
         }
+      } else if (ev.key === GameKeys.Shift) {
+        onHoldBoxClick?.()
       }
     }
 
@@ -334,6 +323,7 @@ function Viewport(props: ViewportProps) {
     gameOver,
     moveCurrentPieceDown1,
     onCurrentPieceChange,
+    onHoldBoxClick,
   ])
 
   // Game loop
@@ -344,7 +334,7 @@ function Viewport(props: ViewportProps) {
       moveCurrentPieceDown1()
     }, REFRESH_RATE)
     return () => clearInterval(interval)
-  }, [gameOver, moveCurrentPieceDown1])
+  }, [gameOver, shadowPiece, moveCurrentPieceDown1])
 
   useEffect(() => {
     const heightIsFull = currentGameState.some((atom) => atom.y === 1)
