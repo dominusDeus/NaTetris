@@ -1,7 +1,9 @@
-import { CommonProps } from "@/utils/common-props"
 import { PropsWithChildren } from "react"
-import { PIXEL_SIZE } from "./constants"
+
+import { CommonProps } from "@/utils/common-props"
 import { tw } from "@/utils/tw"
+
+import { PIXEL_SIZE } from "./constants"
 import { Coords } from "./types"
 
 type BoxProps = CommonProps & {

@@ -1,5 +1,6 @@
-import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
+
+import Piece from "./pieces/piece"
 import { PieceStructure } from "./types"
 
 interface HoldBoxProps {

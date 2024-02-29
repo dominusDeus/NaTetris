@@ -1,5 +1,6 @@
-import { CommonProps } from "@/utils/common-props"
 import { twMerge } from "tailwind-merge"
+
+import { CommonProps } from "@/utils/common-props"
 
 export function Atom({ className, style }: CommonProps) {
   return (

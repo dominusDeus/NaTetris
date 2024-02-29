@@ -1,12 +1,14 @@
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
-import Piece from "./pieces/piece"
 import { twMerge } from "tailwind-merge"
-import { Atom } from "./pieces/atom"
-import { GamePiece, PieceAtom } from "./types"
-import { VIEWPORT_HEIGHT, REFRESH_RATE, PIXEL_SIZE, GameKeys } from "./constants"
+
 import { generateRandomPiece } from "@/utils/pieces"
-import { ComingPieces } from "./coming-pieces-box"
+
 import { Box } from "./box"
+import { ComingPieces } from "./coming-pieces-box"
+import { GameKeys, PIXEL_SIZE, REFRESH_RATE, VIEWPORT_HEIGHT } from "./constants"
+import { Atom } from "./pieces/atom"
+import Piece from "./pieces/piece"
+import { GamePiece, PieceAtom } from "./types"
 
 function getAtomsDimensions(atoms: PieceAtom[]) {
   const pieceSortedByHeight = atoms.toSorted((a, b) => {
