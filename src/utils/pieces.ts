@@ -1,6 +1,7 @@
-import { GamePiece, PieceAtom, PieceStructure } from "@/components/types"
-import * as AllPieces from "../components/pieces/pieces"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
+import { GamePiece, PieceStructure } from "@/components/types"
+
+import * as AllPieces from "../components/pieces/pieces"
 
 function x() {
   //TODO: WORK PROBABILITIES

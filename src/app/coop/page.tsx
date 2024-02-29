@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 import { Box } from "@/components/box"
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { VIEWPORT_WIDTH } from "@/components/constants"
@@ -7,7 +9,6 @@ import HoldBox from "@/components/hold-box"
 import { GamePiece, PieceStructure } from "@/components/types"
 import Viewport from "@/components/viewport"
 import { generateRandomPiece } from "@/utils/pieces"
-import { useState } from "react"
 
 function Game() {
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())

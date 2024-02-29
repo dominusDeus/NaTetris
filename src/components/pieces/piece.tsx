@@ -1,8 +1,10 @@
-import { CommonProps } from "@/utils/common-props"
 import { twMerge } from "tailwind-merge"
-import { Atom } from "./atom"
-import { Dimensions, PieceAtom } from "../types"
+
+import { CommonProps } from "@/utils/common-props"
+
 import { PIXEL_SIZE } from "../constants"
+import { Dimensions, PieceAtom } from "../types"
+import { Atom } from "./atom"
 
 interface PieceProps extends CommonProps {
   atoms: PieceAtom[]
