@@ -1,14 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import Peer, { DataConnection } from "peerjs"
+import { useEffect, useState } from "react"
 
 import { Box } from "@/components/box"
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
 import { GamePiece, PieceStructure } from "@/components/types"
-import Viewport from "@/components/viewport"
 import { generateRandomPiece } from "@/utils/pieces"
+
+function useWs(peer?: Peer, connection?: DataConnection) {
+  useEffect(() => {
+    if (!peer) {
+      return
+    }
+
+    const handlePeerConnection = (conn: DataConnection) => {
+      conn.on("data", (data) => {
+        // Will print 'hi!'
+        console.log(data)
+      })
+      conn.on("open", () => {
+        conn.send("hello!")
+      })
+    }
+
+    peer.on("connection", handlePeerConnection)
+
+    if (!connection) {
+      return
+    }
+
+    const handleOpen = () => {
+      connection.send("hi!")
+    }
+
+    connection.on("open", handleOpen)
+
+    return () => {
+      connection.off("open", handleOpen)
+      peer.off("connection", handlePeerConnection)
+    }
+  }, [connection, peer])
+}
 
 function Game() {
   const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
@@ -20,37 +55,52 @@ function Game() {
   const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(
     () => generateRandomPiece().piece,
   )
-  const [isSwapable, setSwapable] = useState<boolean>(true)
 
-  const handleNextStepTrigger = () => {
-    setCurrentPiece(comingPieces.piece1)
-    setComingPieces({
-      piece1: comingPieces.piece2,
-      piece2: comingPieces.piece3,
-      piece3: generateRandomPiece(),
-    })
-    setSwapable(true)
-  }
+  const [peer, setPeer] = useState<Peer>()
+  const [connection, setConnection] = useState<DataConnection>()
+  useWs(peer, connection)
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
-      <div className="mt-20 self-start">
-        <HoldBox holdBoxPiece={holdBoxPiece} />
-      </div>
-      <Box
-        className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
-        width={VIEWPORT_WIDTH}
-      >
-        <Viewport
-          currentPieceInViewport={currentPieceInViewport}
-          onCurrentPieceChange={setCurrentPiece}
-          width={VIEWPORT_WIDTH * 2}
-          onNextStepTrigger={handleNextStepTrigger}
-        />
-      </Box>
-      <div className="relative mt-20 self-start">
-        <ComingPiecesBox pieces={comingPieces} />
-      </div>
+      {connection ? (
+        <p>You are connected!</p>
+      ) : peer ? (
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault()
+
+            const formData = new FormData(ev.currentTarget)
+            const user2Id = formData.get("user2")
+            if (typeof user2Id !== "string") {
+              throw new Error()
+            }
+
+            setConnection(peer.connect(user2Id))
+          }}
+        >
+          <label>Their Id</label>
+          <input name="user2" />
+          <button>Connect</button>
+        </form>
+      ) : (
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault()
+
+            const formData = new FormData(ev.currentTarget)
+            const user1Id = formData.get("user1")
+            if (typeof user1Id !== "string") {
+              throw new Error()
+            }
+
+            setPeer(new Peer(user1Id))
+          }}
+        >
+          <label>Your Id</label>
+          <input name="user1" />
+          <button>Log in</button>
+        </form>
+      )}
     </div>
   )
 }
