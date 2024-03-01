@@ -15,11 +15,9 @@ import { tw } from "@/utils/tw"
 
 import { useMyState } from "./usePeerState"
 
-type PageProps = {
-  player2Id: string
-}
+type PageProps = {}
 
-export function CoopGame({ player2Id }: PageProps) {
+export function CoopGame({}: PageProps) {
   const [currentPieceInViewport, setCurrentPiece, player2GamePiece] = useMyState<GamePiece>(() =>
     generateRandomPiece(),
   )

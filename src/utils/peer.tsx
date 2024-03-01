@@ -33,7 +33,6 @@ export function usePeerConnections(peer: Peer) {
   useEffect(() => {
     const handleIncommingConnection = (conn: DataConnection) => {
       const handleOpen = () => {
-        console.log("Someone has connected with you:", conn.peer)
         setConns((v) => [...v, conn])
       }
 

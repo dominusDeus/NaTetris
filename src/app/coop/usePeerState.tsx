@@ -1,11 +1,8 @@
-import * as devalue from "devalue"
 import { Dispatch, SetStateAction, useCallback, useEffect, useId, useState } from "react"
-
-import { GamePieceSchema } from "@/components/types"
 
 import { usePeerContext } from "../../utils/peer"
 import { useConnectionData } from "../../utils/peer"
-import { PeerDataSchema, readMessage, writeMessage } from "../../utils/peer-game-message"
+import { readMessage, writeMessage } from "../../utils/peer-game-message"
 
 function isStateSetterFunction<T>(
   v: SetStateAction<T | undefined>,
@@ -32,7 +29,6 @@ export function useCoopState<T>(initialState?: T | (() => T)) {
       setState((v) => {
         const newState = isStateSetterFunction(action) ? action(v) : action
 
-        console.log("Sending data to peers: ", { stateId, data: newState })
         conn.send(writeMessage(stateId, newState))
 
         return newState
@@ -50,7 +46,6 @@ export function useCoopState<T>(initialState?: T | (() => T)) {
       return
     }
 
-    console.log("Receiving data from peers: ", { stateId, data })
     setState(data) // TODO: We should validate if `data` is the same type as this `state`
   }, [connectionData, stateId])
 
@@ -78,7 +73,6 @@ export function useMyState<T>(initialState?: T | (() => T)) {
       setMyState((v) => {
         const newState = isStateSetterFunction(action) ? action(v) : action
 
-        console.log("Sending data to peers: ", { stateId, data: newState })
         conn.send(writeMessage(stateId, newState))
 
         return newState
@@ -96,7 +90,6 @@ export function useMyState<T>(initialState?: T | (() => T)) {
       return
     }
 
-    console.log("Receiving data from peers: ", { stateId, data })
     setTheirState(data) // TODO: We should validate if `data` is the same type as this `state`
   }, [connectionData, stateId])
 

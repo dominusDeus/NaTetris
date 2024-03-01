@@ -18,7 +18,6 @@ const SearchParamsSchema = z.object({
 function CoopPage() {
   const router = useRouter()
   const searchParams = SearchParamsSchema.parse(Object.fromEntries(useSearchParams()!.entries()))
-  console.log({ searchParams })
 
   const peer = useMemo(() => {
     if (searchParams.me === undefined) {
@@ -27,19 +26,17 @@ function CoopPage() {
 
     return new Peer(searchParams.me)
   }, [searchParams.me])
-  console.log("myself", peer)
 
   const [myConnectionToOtherUser, setMyConnectionToOtherUser] = useState<DataConnection>()
   const [usersConnectedToMe] = usePeerConnections(peer!)
   const conn = myConnectionToOtherUser || usersConnectedToMe
-  console.log("Playing game with following connection: ", conn)
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
       <PeerProvider value={conn ? { conn } : null}>
         {conn ? (
           conn.open ? (
-            <CoopGame player2Id={conn.peer} />
+            <CoopGame />
           ) : (
             <span>Conn is not yet open</span>
           )
