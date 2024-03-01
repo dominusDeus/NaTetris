@@ -7,9 +7,10 @@ import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
 import { PIECE_INITIAL_POSITION } from "@/components/constants"
 import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
+import { Atom } from "@/components/pieces/atom"
 import Piece from "@/components/pieces/piece"
 import { GamePiece, PieceStructure } from "@/components/types"
-import Viewport from "@/components/viewport"
+import { useGameState, useShadowPiece } from "@/components/viewport"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
@@ -63,6 +64,16 @@ export function CoopGame({}: PageProps) {
     setSwapable(true)
   }
 
+  const currentGameState = useGameState({
+    currentPieceInViewport,
+    width: VIEWPORT_WIDTH,
+    onCurrentPieceChange: setCurrentPiece,
+    onHoldBoxClick: handleHoldBoxSwap,
+    onNextStepTrigger: handleNextStepTrigger,
+  })
+
+  const shadowPiece = useShadowPiece({ currentPieceInViewport, currentGameState })
+
   return (
     <div className="flex h-full items-center justify-center gap-4">
       <div className="mt-20 self-start">
@@ -72,32 +83,40 @@ export function CoopGame({}: PageProps) {
         className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
         width={VIEWPORT_WIDTH * 2}
       >
-        <Viewport
-          currentPieceInViewport={currentPieceInViewport}
-          onCurrentPieceChange={setCurrentPiece}
-          onHoldBoxClick={handleHoldBoxSwap}
-          onNextStepTrigger={handleNextStepTrigger}
-          width={VIEWPORT_WIDTH * 2}
-        >
-          <Box.Place {...currentPieceInViewport.coords}>
+        <Box.Place {...currentPieceInViewport.coords}>
+          <Piece
+            atoms={currentPieceInViewport.piece.atoms}
+            className={tw("z-50")}
+            color={currentPieceInViewport.piece.color}
+          />
+        </Box.Place>
+
+        {/* Their Piece */}
+        {player2GamePiece && (
+          <Box.Place {...player2GamePiece.coords}>
             <Piece
-              atoms={currentPieceInViewport.piece.atoms}
+              atoms={player2GamePiece.piece.atoms}
               className={tw("z-50")}
-              color={currentPieceInViewport.piece.color}
+              color={player2GamePiece.piece.color}
             />
           </Box.Place>
+        )}
 
-          {/* Their Piece */}
-          {player2GamePiece && (
-            <Box.Place {...player2GamePiece.coords}>
-              <Piece
-                atoms={player2GamePiece.piece.atoms}
-                className={tw("z-50")}
-                color={player2GamePiece.piece.color}
-              />
-            </Box.Place>
-          )}
-        </Viewport>
+        {shadowPiece && (
+          <Box.Place {...shadowPiece.coords}>
+            <Piece
+              atoms={shadowPiece.piece.atoms}
+              className={tw("z-10")}
+              color={shadowPiece.piece.color}
+            />
+          </Box.Place>
+        )}
+
+        {currentGameState.map((atom, i) => (
+          <Box.Place {...atom} key={i}>
+            <Atom className={tw("bg-orange-300")} />
+          </Box.Place>
+        ))}
       </Box>
       <div className="relative mt-20 self-start">
         <ComingPiecesBox pieces={comingPieces} />

@@ -1,14 +1,6 @@
-import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
-import { twMerge } from "tailwind-merge"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { useCoopState } from "@/app/coop/usePeerState"
-import { generateRandomPiece } from "@/utils/pieces"
-
-import { Box } from "./box"
-import { ComingPieces } from "./coming-pieces-box"
-import { GameKeys, PIXEL_SIZE, REFRESH_RATE, VIEWPORT_HEIGHT } from "./constants"
-import { Atom } from "./pieces/atom"
-import Piece from "./pieces/piece"
+import { GameKeys, REFRESH_RATE, VIEWPORT_HEIGHT } from "./constants"
 import { GamePiece, PieceAtom } from "./types"
 
 function getAtomsDimensions(atoms: PieceAtom[]) {
@@ -125,7 +117,7 @@ function removeCompletedLines(gameState: PieceAtom[], width: number): PieceAtom[
     .flat()
 }
 
-interface ViewportProps {
+type UseGameStateProps = {
   currentPieceInViewport: GamePiece
   onCurrentPieceChange?: (piece: GamePiece) => void
   onHoldBoxClick?: () => void
@@ -133,50 +125,15 @@ interface ViewportProps {
   width: number
 }
 
-function Viewport(props: PropsWithChildren<ViewportProps>) {
-  const { children, width } = props
-
-  const currentGameState = useGameState(props)
-  const shadowPiece = useShadowPiece({ ...props, currentGameState })
-
-  return (
-    <div className="relative h-full w-full" style={{ width: PIXEL_SIZE * width + "px" }}>
-      {shadowPiece && (
-        <Box.Place {...shadowPiece.coords}>
-          <Piece
-            atoms={shadowPiece.piece.atoms}
-            className={twMerge("z-10")}
-            style={{
-              top: shadowPiece.coords.y * PIXEL_SIZE,
-              left: shadowPiece.coords.x * PIXEL_SIZE,
-            }}
-            color={shadowPiece.piece.color}
-          />
-        </Box.Place>
-      )}
-
-      {children}
-
-      {currentGameState.map((atom, i) => (
-        <Box.Place {...atom} key={i}>
-          <Atom className={twMerge("bg-orange-300")} />
-        </Box.Place>
-      ))}
-    </div>
-  )
-}
-
-export default Viewport
-
-function useGameState({
+export function useGameState({
   currentPieceInViewport,
   width,
   onCurrentPieceChange,
   onHoldBoxClick,
   onNextStepTrigger,
-}: ViewportProps) {
-  const [gameOver, setGameOver] = useCoopState(false)
-  const [currentGameState, setCurrentGameState] = useCoopState<PieceAtom[]>([])
+}: UseGameStateProps) {
+  const [gameOver, setGameOver] = useState(false)
+  const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
 
   const addPieceToGameState = useCallback(
     (piece: GamePiece) => {
@@ -339,18 +296,18 @@ function useGameState({
       setGameOver(true)
       return
     }
-  }, [currentGameState])
+  }, [currentGameState, setGameOver])
 
   return currentGameState
 }
 
-function useShadowPiece({
+export function useShadowPiece({
   currentPieceInViewport,
   currentGameState,
 }: {
   currentPieceInViewport: GamePiece
   currentGameState: PieceAtom[]
-}) {
+}): GamePiece | undefined {
   const shadowPiece = useMemo(() => {
     for (let i = currentPieceInViewport.coords.y + 1; i <= VIEWPORT_HEIGHT; i++) {
       const futureCurrentPieceInViewport = {
