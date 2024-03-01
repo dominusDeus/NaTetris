@@ -5,9 +5,10 @@ import Peer, { DataConnection } from "peerjs"
 import { useMemo, useState } from "react"
 import { z } from "zod"
 
+import { connectWithOtherPeer } from "@/utils/peer"
+
 import { PeerProvider, usePeerConnections } from "../../utils/peer"
 import { CoopGame } from "./game"
-import { connectWithOtherPeer } from "./usePeerState"
 
 const SearchParamsSchema = z.object({
   me: z.string().min(1).optional(),

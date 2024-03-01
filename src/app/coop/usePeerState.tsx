@@ -1,5 +1,4 @@
 import * as devalue from "devalue"
-import Peer, { DataConnection } from "peerjs"
 import { Dispatch, SetStateAction, useCallback, useEffect, useId, useState } from "react"
 
 import { GamePieceSchema } from "@/components/types"
@@ -102,31 +101,4 @@ export function useMyState<T>(initialState?: T | (() => T)) {
   }, [connectionData, stateId])
 
   return [myState, customSetData, theirState] as const
-}
-
-export function usePeerData(id: string) {
-  const data = useConnectionData()
-  console.log("usePeerData state:", data)
-  if (typeof data !== "string") {
-    throw new Error("")
-  }
-
-  return PeerDataSchema.parse(devalue.parse(data)).data
-}
-
-export function usePlayerGamePiece(id: string) {
-  const data = usePeerData(id)
-  return GamePieceSchema.optional().parse(data)
-}
-
-export function connectWithOtherPeer(myself: Peer, otherId: string) {
-  const connection = myself.connect(otherId)
-
-  return new Promise<DataConnection>((resolve) => {
-    const handleOpen = () => {
-      resolve(connection)
-    }
-
-    connection.on("open", handleOpen)
-  })
 }

@@ -13,7 +13,7 @@ import Viewport from "@/components/viewport"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
-import { useCoopState, useMyState, usePlayerGamePiece } from "./usePeerState"
+import { useMyState } from "./usePeerState"
 
 type PageProps = {
   player2Id: string

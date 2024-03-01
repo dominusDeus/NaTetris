@@ -3,7 +3,7 @@
  * This file should not have any logic specific to this project.
  */
 
-import Peer, { DataConnection } from "peerjs"
+import { DataConnection, Peer } from "peerjs"
 import { createContext, use, useEffect, useState } from "react"
 
 const PeerContext = createContext<{ conn: DataConnection } | null>(null)
@@ -17,6 +17,7 @@ export function usePeerContext() {
   }
 
   if (!context.conn.open) {
+    // BUG: when the other person disconnects, this error should not be thrown.
     throw new Error("You need to provide an open connection")
   }
 
@@ -68,4 +69,16 @@ export function useConnectionData() {
   }, [conn])
 
   return state
+}
+
+export function connectWithOtherPeer(myself: Peer, otherId: string) {
+  const connection = myself.connect(otherId)
+
+  return new Promise<DataConnection>((resolve) => {
+    const handleOpen = () => {
+      resolve(connection)
+    }
+
+    connection.on("open", handleOpen)
+  })
 }
