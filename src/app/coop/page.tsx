@@ -1,108 +1,112 @@
 "use client"
 
+import { useRouter, useSearchParams } from "next/navigation"
 import Peer, { DataConnection } from "peerjs"
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
+import { z } from "zod"
 
-import { Box } from "@/components/box"
-import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
-import { VIEWPORT_WIDTH } from "@/components/constants"
-import HoldBox from "@/components/hold-box"
-import { GamePiece, PieceStructure } from "@/components/types"
-import { generateRandomPiece } from "@/utils/pieces"
+import { CoopGame } from "./game"
+import { connectWithOtherPeer, CoopProvider, usePeerConnections } from "./usePeerState"
 
-function useWs(peer?: Peer, connection?: DataConnection) {
-  useEffect(() => {
-    if (!peer) {
-      return
+const SearchParamsSchema = z.object({
+  me: z.string().min(1).optional(),
+  them: z.string().min(1).optional(),
+})
+
+function CoopPage() {
+  const router = useRouter()
+  const searchParams = SearchParamsSchema.parse(Object.fromEntries(useSearchParams()!.entries()))
+  console.log({ searchParams })
+
+  const peer = useMemo(() => {
+    if (searchParams.me === undefined) {
+      return null
     }
 
-    const handlePeerConnection = (conn: DataConnection) => {
-      conn.on("data", (data) => {
-        // Will print 'hi!'
-        console.log(data)
-      })
-      conn.on("open", () => {
-        conn.send("hello!")
-      })
-    }
+    return new Peer(searchParams.me)
+  }, [searchParams.me])
+  console.log("myself", peer)
 
-    peer.on("connection", handlePeerConnection)
-
-    if (!connection) {
-      return
-    }
-
-    const handleOpen = () => {
-      connection.send("hi!")
-    }
-
-    connection.on("open", handleOpen)
-
-    return () => {
-      connection.off("open", handleOpen)
-      peer.off("connection", handlePeerConnection)
-    }
-  }, [connection, peer])
-}
-
-function Game() {
-  const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
-  const [comingPieces, setComingPieces] = useState<ComingPieces>(() => ({
-    piece1: generateRandomPiece(),
-    piece2: generateRandomPiece(),
-    piece3: generateRandomPiece(),
-  }))
-  const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(
-    () => generateRandomPiece().piece,
-  )
-
-  const [peer, setPeer] = useState<Peer>()
-  const [connection, setConnection] = useState<DataConnection>()
-  useWs(peer, connection)
+  const [myConnectionToOtherUser, setMyConnectionToOtherUser] = useState<DataConnection>()
+  const [usersConnectedToMe] = usePeerConnections(peer!)
+  const conn = myConnectionToOtherUser || usersConnectedToMe
+  console.log("Playing game with following connection: ", conn)
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
-      {connection ? (
-        <p>You are connected!</p>
-      ) : peer ? (
-        <form
-          onSubmit={(ev) => {
-            ev.preventDefault()
+      <CoopProvider value={conn ? { conn } : null}>
+        {conn ? (
+          conn.open ? (
+            <CoopGame player2Id={conn.peer} />
+          ) : (
+            <span>Conn is not yet open</span>
+          )
+        ) : peer ? (
+          <div className="flex h-52 flex-col items-center justify-center gap-y-8">
+            <form
+              onSubmit={async (ev) => {
+                ev.preventDefault()
 
-            const formData = new FormData(ev.currentTarget)
-            const user2Id = formData.get("user2")
-            if (typeof user2Id !== "string") {
-              throw new Error()
-            }
+                const formData = new FormData(ev.currentTarget)
+                const userId = formData.get("user2")
+                if (typeof userId !== "string") {
+                  throw new Error()
+                }
 
-            setConnection(peer.connect(user2Id))
-          }}
-        >
-          <label>Their Id</label>
-          <input name="user2" />
-          <button>Connect</button>
-        </form>
-      ) : (
-        <form
-          onSubmit={(ev) => {
-            ev.preventDefault()
+                // const searchParamss = new URLSearchParams([
+                //   ...Object.entries(searchParams),
+                //   ["them", userId],
+                // ])
 
-            const formData = new FormData(ev.currentTarget)
-            const user1Id = formData.get("user1")
-            if (typeof user1Id !== "string") {
-              throw new Error()
-            }
+                // router.push("?" + searchParamss)
 
-            setPeer(new Peer(user1Id))
-          }}
-        >
-          <label>Your Id</label>
-          <input name="user1" />
-          <button>Log in</button>
-        </form>
-      )}
+                setMyConnectionToOtherUser(await connectWithOtherPeer(peer, userId))
+              }}
+            >
+              <label>Player 2 ID</label>
+              <input
+                className="border border-slate-400"
+                name="user2"
+                key={1}
+                defaultValue={searchParams.them}
+              />
+              <button>Connect</button>
+            </form>
+            <hr className="w-full" />
+            <span>Or wait for other people to connect to you</span>
+          </div>
+        ) : (
+          <form
+            onSubmit={(ev) => {
+              ev.preventDefault()
+
+              const formData = new FormData(ev.currentTarget)
+              const userId = formData.get("user1")
+              if (typeof userId !== "string") {
+                throw new Error()
+              }
+
+              const searchParamss = new URLSearchParams([
+                ...Object.entries(searchParams),
+                ["me", userId],
+              ])
+
+              router.push("?" + searchParamss)
+            }}
+          >
+            <label>Your Id</label>
+            <input
+              className="border border-slate-400"
+              name="user1"
+              key={2}
+              defaultValue={searchParams.me}
+            />
+            <button>Log in</button>
+          </form>
+        )}
+      </CoopProvider>
     </div>
   )
 }
 
-export default Game
+export default CoopPage

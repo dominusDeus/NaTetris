@@ -13,17 +13,30 @@ import Viewport from "@/components/viewport"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
-function Game() {
-  const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
+import { usePeerState, usePlayerGamePiece } from "./usePeerState"
+
+type PageProps = {
+  player2Id: string
+}
+
+export function CoopGame({ player2Id }: PageProps) {
+  const [currentPieceInViewport, setCurrentPiece] = usePeerState<GamePiece>(() =>
+    generateRandomPiece(),
+  )
+
+  const player2GamePiece = usePlayerGamePiece(player2Id)
+
   const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(() => ({
     ...generateRandomPiece().piece,
     isSwapable: true,
   }))
+
   const [comingPieces, setComingPieces] = useState<ComingPieces>(() => ({
     piece1: generateRandomPiece(),
     piece2: generateRandomPiece(),
     piece3: generateRandomPiece(),
   }))
+
   const [isSwapable, setSwapable] = useState<boolean>(true)
 
   const handleHoldBoxSwap = () => {
@@ -77,6 +90,17 @@ function Game() {
               color={currentPieceInViewport.piece.color}
             />
           </Box.Place>
+
+          {/* Their Piece */}
+          {player2GamePiece && (
+            <Box.Place {...player2GamePiece.coords}>
+              <Piece
+                atoms={player2GamePiece.piece.atoms}
+                className={tw("z-50")}
+                color={player2GamePiece.piece.color}
+              />
+            </Box.Place>
+          )}
         </Viewport>
       </Box>
       <div className="relative mt-20 self-start">
@@ -85,5 +109,3 @@ function Game() {
     </div>
   )
 }
-
-export default Game

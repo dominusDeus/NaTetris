@@ -1,6 +1,7 @@
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
+import { usePeerState } from "@/app/coop/usePeerState"
 import { generateRandomPiece } from "@/utils/pieces"
 
 import { Box } from "./box"
