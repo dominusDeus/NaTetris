@@ -1,62 +1,112 @@
 import * as devalue from "devalue"
 import Peer, { DataConnection } from "peerjs"
-import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useEffect,
-  useId,
-  useState,
-} from "react"
-import { z } from "zod"
+import { Dispatch, SetStateAction, useCallback, useEffect, useId, useState } from "react"
 
 import { GamePieceSchema } from "@/components/types"
 
-const CoopContext = createContext<{ conn: DataConnection } | null>(null)
+import { usePeerContext } from "../../utils/peer"
+import { useConnectionData } from "../../utils/peer"
+import { PeerDataSchema, readMessage, writeMessage } from "../../utils/peer-game-message"
 
-export const CoopProvider = CoopContext.Provider
-
-export function useCoop() {
-  const context = useContext(CoopContext)
-  if (!context) {
-    throw new Error("No Coop context found")
-  }
-
-  return context
+function isStateSetterFunction<T>(
+  v: SetStateAction<T | undefined>,
+): v is (prevState: T | undefined) => T | undefined {
+  return !!v && typeof v === "function" && v.length === 1
 }
 
-const PeerDataSchema = z.object({
-  id: z.string(),
-  data: z.any(),
-})
+export function useCoopState<T>(initialState: T | (() => T)): [T, Dispatch<SetStateAction<T>>]
 
-type PeerDataSchema = z.infer<typeof PeerDataSchema>
+export function useCoopState<T = undefined>(): [
+  T | undefined,
+  Dispatch<SetStateAction<T | undefined>>,
+]
 
-export function sendDataToConnection(id: string, data: unknown, conn: DataConnection) {
-  conn.send(devalue.stringify({ id, data }))
-}
+export function useCoopState<T>(initialState?: T | (() => T)) {
+  const { conn } = usePeerContext()
 
-function useConnectionData() {
-  const { conn } = useCoop()
+  const stateId = useId()
+  const [state, setState] = useState(initialState)
+  const connectionData = useConnectionData()
 
-  const [state, setState] = useState<unknown>()
+  const customSetData: Dispatch<SetStateAction<T | undefined>> = useCallback(
+    (action) => {
+      setState((v) => {
+        const newState = isStateSetterFunction(action) ? action(v) : action
+
+        console.log("Sending data to peers: ", { stateId, data: newState })
+        conn.send(writeMessage(stateId, newState))
+
+        return newState
+      })
+    },
+    [conn, stateId],
+  )
 
   useEffect(() => {
-    conn.on("data", setState)
+    if (!connectionData) return
 
-    return () => {
-      conn.off("data", setState)
+    const { id: messageId, data } = readMessage(connectionData)
+    const messageIsForThisState = messageId === stateId
+    if (!messageIsForThisState) {
+      return
     }
-  }, [conn])
 
-  return state
+    console.log("Receiving data from peers: ", { stateId, data })
+    setState(data) // TODO: We should validate if `data` is the same type as this `state`
+  }, [connectionData, stateId])
+
+  return [state, customSetData] as const
+}
+
+export function useMyState<T>(initialState: T | (() => T)): [T, Dispatch<SetStateAction<T>>, T]
+
+export function useMyState<T = undefined>(): [
+  T | undefined,
+  Dispatch<SetStateAction<T | undefined>>,
+  T | undefined,
+]
+
+export function useMyState<T>(initialState?: T | (() => T)) {
+  const { conn } = usePeerContext()
+
+  const stateId = useId()
+  const [myState, setMyState] = useState(initialState)
+  const [theirState, setTheirState] = useState()
+  const connectionData = useConnectionData()
+
+  const customSetData: Dispatch<SetStateAction<T | undefined>> = useCallback(
+    (action) => {
+      setMyState((v) => {
+        const newState = isStateSetterFunction(action) ? action(v) : action
+
+        console.log("Sending data to peers: ", { stateId, data: newState })
+        conn.send(writeMessage(stateId, newState))
+
+        return newState
+      })
+    },
+    [conn, stateId],
+  )
+
+  useEffect(() => {
+    if (!connectionData) return
+
+    const { id: messageId, data } = readMessage(connectionData)
+    const messageIsForThisState = messageId === stateId
+    if (!messageIsForThisState) {
+      return
+    }
+
+    console.log("Receiving data from peers: ", { stateId, data })
+    setTheirState(data) // TODO: We should validate if `data` is the same type as this `state`
+  }, [connectionData, stateId])
+
+  return [myState, customSetData, theirState] as const
 }
 
 export function usePeerData(id: string) {
   const data = useConnectionData()
-  console.log("usePlayerData state:", data)
+  console.log("usePeerData state:", data)
   if (typeof data !== "string") {
     throw new Error("")
   }
@@ -64,79 +114,9 @@ export function usePeerData(id: string) {
   return PeerDataSchema.parse(devalue.parse(data)).data
 }
 
-export function usePeerState<T>(initialState: T | (() => T)): [T, Dispatch<SetStateAction<T>>]
-
-export function usePeerState<T = undefined>(): [
-  T | undefined,
-  Dispatch<SetStateAction<T | undefined>>,
-]
-
-export function usePeerState<T>(initialState?: T | (() => T)) {
-  const { conn } = useCoop()
-  if (!conn.open) {
-    throw new Error("You need to provide an open connection")
-  }
-
-  const stateId = useId()
-  const [state, setState] = useState(initialState)
-
-  useEffect(() => {
-    // console.log("conn is: ", conn.open)
-    console.log("Sending state to peers: ", state)
-    sendDataToConnection(stateId, state, conn)
-  }, [conn, state, stateId])
-
-  return [state, setState] as const
-}
-
-export function usePState<T>(initialState?: T | (() => T)) {
-  const { conn } = useCoop()
-  if (!conn.open) {
-    throw new Error("You need to provide an open connection")
-  }
-
-  const stateId = useId()
-  const [state, setState] = useState(initialState)
-
-  useEffect(() => {
-    // console.log("conn is: ", conn.open)
-    console.log("Sending state to peers: ", state)
-    sendDataToConnection(stateId, state, conn)
-  }, [conn, state, stateId])
-
-  return [state, setState] as const
-}
-
 export function usePlayerGamePiece(id: string) {
   const data = usePeerData(id)
   return GamePieceSchema.optional().parse(data)
-}
-
-/**
- * Listen to other peers
- */
-export function usePeerConnections(peer: Peer) {
-  const [conns, setConns] = useState<DataConnection[]>([])
-
-  useEffect(() => {
-    const handleIncommingConnection = (conn: DataConnection) => {
-      const handleOpen = () => {
-        console.log("Someone has connected with you:", conn.peer)
-        setConns((v) => [...v, conn])
-      }
-
-      conn.on("open", handleOpen)
-    }
-
-    // Someone is trying to connect with me
-    peer.on("connection", handleIncommingConnection)
-
-    return () => {
-      peer.off("connection", handleIncommingConnection)
-    }
-  }, [peer])
-
-  return conns
 }
 
 export function connectWithOtherPeer(myself: Peer, otherId: string) {

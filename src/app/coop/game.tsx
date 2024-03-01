@@ -13,18 +13,16 @@ import Viewport from "@/components/viewport"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
-import { usePeerState, usePlayerGamePiece } from "./usePeerState"
+import { useCoopState, useMyState, usePlayerGamePiece } from "./usePeerState"
 
 type PageProps = {
   player2Id: string
 }
 
 export function CoopGame({ player2Id }: PageProps) {
-  const [currentPieceInViewport, setCurrentPiece] = usePeerState<GamePiece>(() =>
+  const [currentPieceInViewport, setCurrentPiece, player2GamePiece] = useMyState<GamePiece>(() =>
     generateRandomPiece(),
   )
-
-  const player2GamePiece = usePlayerGamePiece(player2Id)
 
   const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(() => ({
     ...generateRandomPiece().piece,

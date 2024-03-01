@@ -5,8 +5,9 @@ import Peer, { DataConnection } from "peerjs"
 import { useMemo, useState } from "react"
 import { z } from "zod"
 
+import { PeerProvider, usePeerConnections } from "../../utils/peer"
 import { CoopGame } from "./game"
-import { connectWithOtherPeer, CoopProvider, usePeerConnections } from "./usePeerState"
+import { connectWithOtherPeer } from "./usePeerState"
 
 const SearchParamsSchema = z.object({
   me: z.string().min(1).optional(),
@@ -34,7 +35,7 @@ function CoopPage() {
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
-      <CoopProvider value={conn ? { conn } : null}>
+      <PeerProvider value={conn ? { conn } : null}>
         {conn ? (
           conn.open ? (
             <CoopGame player2Id={conn.peer} />
@@ -104,7 +105,7 @@ function CoopPage() {
             <button>Log in</button>
           </form>
         )}
-      </CoopProvider>
+      </PeerProvider>
     </div>
   )
 }

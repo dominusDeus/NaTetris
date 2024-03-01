@@ -1,7 +1,7 @@
 import { PropsWithChildren, useCallback, useEffect, useMemo, useState } from "react"
 import { twMerge } from "tailwind-merge"
 
-import { usePeerState } from "@/app/coop/usePeerState"
+import { useCoopState } from "@/app/coop/usePeerState"
 import { generateRandomPiece } from "@/utils/pieces"
 
 import { Box } from "./box"
@@ -175,8 +175,8 @@ function useGameState({
   onHoldBoxClick,
   onNextStepTrigger,
 }: ViewportProps) {
-  const [gameOver, setGameOver] = useState(false)
-  const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
+  const [gameOver, setGameOver] = useCoopState(false)
+  const [currentGameState, setCurrentGameState] = useCoopState<PieceAtom[]>([])
 
   const addPieceToGameState = useCallback(
     (piece: GamePiece) => {
@@ -191,7 +191,7 @@ function useGameState({
       setCurrentGameState(removeCompletedLines(newGameState, width))
       onNextStepTrigger?.()
     },
-    [currentGameState, onNextStepTrigger, width],
+    [currentGameState, onNextStepTrigger, setCurrentGameState, width],
   )
 
   const moveCurrentPieceDown1 = useCallback(() => {
