@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { GameKeys, REFRESH_RATE, VIEWPORT_HEIGHT } from "../components/constants"
 import { GamePiece, PieceAtom } from "../components/types"
@@ -11,6 +11,7 @@ import {
   removeCompletedLines,
   rotateAtomsToTheRight,
 } from "../utils/atom-utils"
+import { useInterval } from "./use-interval"
 
 type UseGameStateProps = {
   currentPieceInViewport: GamePiece
@@ -27,8 +28,12 @@ export function useGameState({
   onHoldBoxClick,
   onNextStepTrigger,
 }: UseGameStateProps) {
-  const [gameOver, setGameOver] = useState(false)
   const [currentGameState, setCurrentGameState] = useState<PieceAtom[]>([])
+
+  const heightIsFull = useMemo(
+    () => currentGameState.some((atom) => atom.y === 1),
+    [currentGameState],
+  )
 
   const addPieceToGameState = useCallback(
     (piece: GamePiece) => {
@@ -68,7 +73,7 @@ export function useGameState({
   }, [addPieceToGameState, currentGameState, currentPieceInViewport, onCurrentPieceChange])
 
   useEffect(() => {
-    if (gameOver) return
+    if (heightIsFull) return
 
     const handleKeydown = (ev: KeyboardEvent) => {
       if (ev.key === GameKeys.ArrowLeft) {
@@ -167,31 +172,18 @@ export function useGameState({
     addPieceToGameState,
     currentGameState,
     currentPieceInViewport,
-    gameOver,
+    heightIsFull,
     moveCurrentPieceDown1,
     onCurrentPieceChange,
     onHoldBoxClick,
     width,
   ])
 
-  // Game loop
-  useEffect(() => {
-    if (gameOver) return
+  useInterval(!heightIsFull, moveCurrentPieceDown1, REFRESH_RATE)
 
-    const interval = setInterval(() => {
-      moveCurrentPieceDown1()
-    }, REFRESH_RATE)
-    return () => clearInterval(interval)
-  }, [gameOver, moveCurrentPieceDown1])
-
-  useEffect(() => {
-    const heightIsFull = currentGameState.some((atom) => atom.y === 1)
-    if (heightIsFull) {
-      console.log("GAME OVER")
-      setGameOver(true)
-      return
-    }
-  }, [currentGameState, setGameOver])
+  if (heightIsFull) {
+    console.log("GAME OVER")
+  }
 
   return currentGameState
 }

@@ -109,3 +109,11 @@ function CoopPage() {
 }
 
 export default CoopPage
+
+function getNum() {
+  return 4
+}
+
+function APp() {
+  return <div>{getNum()}</div>
+}
