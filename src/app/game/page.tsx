@@ -76,14 +76,6 @@ function Game() {
         height={VIEWPORT_HEIGHT}
         width={VIEWPORT_WIDTH}
       >
-        <Box.Place {...currentPieceInViewport.coords}>
-          <Piece
-            atoms={currentPieceInViewport.piece.atoms}
-            className={tw("z-50")}
-            color={currentPieceInViewport.piece.color}
-          />
-        </Box.Place>
-
         {shadowPiece && (
           <Box.Place {...shadowPiece.coords}>
             <Piece
@@ -93,6 +85,14 @@ function Game() {
             />
           </Box.Place>
         )}
+
+        <Box.Place {...currentPieceInViewport.coords}>
+          <Piece
+            atoms={currentPieceInViewport.piece.atoms}
+            className={tw("z-50")}
+            color={currentPieceInViewport.piece.color}
+          />
+        </Box.Place>
 
         {currentGameState.map((atom, i) => (
           <Box.Place {...atom} key={i}>
