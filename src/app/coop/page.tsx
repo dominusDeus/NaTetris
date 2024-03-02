@@ -1,58 +1,119 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import Peer, { DataConnection } from "peerjs"
+import { useMemo, useState } from "react"
+import { z } from "zod"
 
-import { Box } from "@/components/box"
-import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
-import { VIEWPORT_WIDTH } from "@/components/constants"
-import HoldBox from "@/components/hold-box"
-import { GamePiece, PieceStructure } from "@/components/types"
-import Viewport from "@/components/viewport"
-import { generateRandomPiece } from "@/utils/pieces"
+import { connectWithOtherPeer } from "@/utils/peer"
 
-function Game() {
-  const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
-  const [comingPieces, setComingPieces] = useState<ComingPieces>(() => ({
-    piece1: generateRandomPiece(),
-    piece2: generateRandomPiece(),
-    piece3: generateRandomPiece(),
-  }))
-  const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(
-    () => generateRandomPiece().piece,
-  )
-  const [isSwapable, setSwapable] = useState<boolean>(true)
+import { PeerProvider, usePeerConnections } from "../../utils/peer"
+import { CoopGame } from "./game"
 
-  const handleNextStepTrigger = () => {
-    setCurrentPiece(comingPieces.piece1)
-    setComingPieces({
-      piece1: comingPieces.piece2,
-      piece2: comingPieces.piece3,
-      piece3: generateRandomPiece(),
-    })
-    setSwapable(true)
-  }
+const SearchParamsSchema = z.object({
+  me: z.string().min(1).optional(),
+  them: z.string().min(1).optional(),
+})
+
+function CoopPage() {
+  const router = useRouter()
+  const searchParams = SearchParamsSchema.parse(Object.fromEntries(useSearchParams()!.entries()))
+
+  const peer = useMemo(() => {
+    if (searchParams.me === undefined) {
+      return null
+    }
+
+    return new Peer(searchParams.me)
+  }, [searchParams.me])
+
+  const [myConnectionToOtherUser, setMyConnectionToOtherUser] = useState<DataConnection>()
+  const [usersConnectedToMe] = usePeerConnections(peer!)
+  const conn = myConnectionToOtherUser || usersConnectedToMe
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
-      <div className="mt-20 self-start">
-        <HoldBox holdBoxPiece={holdBoxPiece} />
-      </div>
-      <Box
-        className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
-        width={VIEWPORT_WIDTH}
-      >
-        <Viewport
-          currentPieceInViewport={currentPieceInViewport}
-          onCurrentPieceChange={setCurrentPiece}
-          width={VIEWPORT_WIDTH * 2}
-          onNextStepTrigger={handleNextStepTrigger}
-        />
-      </Box>
-      <div className="relative mt-20 self-start">
-        <ComingPiecesBox pieces={comingPieces} />
-      </div>
+      <PeerProvider value={conn ? { conn } : null}>
+        {conn ? (
+          conn.open ? (
+            <CoopGame />
+          ) : (
+            <span>Conn is not yet open</span>
+          )
+        ) : peer ? (
+          <div className="flex h-52 flex-col items-center justify-center gap-y-8">
+            <form
+              onSubmit={async (ev) => {
+                ev.preventDefault()
+
+                const formData = new FormData(ev.currentTarget)
+                const userId = formData.get("user2")
+                if (typeof userId !== "string") {
+                  throw new Error()
+                }
+
+                // const searchParamss = new URLSearchParams([
+                //   ...Object.entries(searchParams),
+                //   ["them", userId],
+                // ])
+
+                // router.push("?" + searchParamss)
+
+                setMyConnectionToOtherUser(await connectWithOtherPeer(peer, userId))
+              }}
+            >
+              <label>Player 2 ID</label>
+              <input
+                className="border border-slate-400"
+                name="user2"
+                key={1}
+                defaultValue={searchParams.them}
+              />
+              <button>Connect</button>
+            </form>
+            <hr className="w-full" />
+            <span>Or wait for other people to connect to you</span>
+          </div>
+        ) : (
+          <form
+            onSubmit={(ev) => {
+              ev.preventDefault()
+
+              const formData = new FormData(ev.currentTarget)
+              const userId = formData.get("user1")
+              if (typeof userId !== "string") {
+                throw new Error()
+              }
+
+              const searchParamss = new URLSearchParams([
+                ...Object.entries(searchParams),
+                ["me", userId],
+              ])
+
+              router.push("?" + searchParamss)
+            }}
+          >
+            <label>Your Id</label>
+            <input
+              className="border border-slate-400"
+              name="user1"
+              key={2}
+              defaultValue={searchParams.me}
+            />
+            <button>Log in</button>
+          </form>
+        )}
+      </PeerProvider>
     </div>
   )
 }
 
-export default Game
+export default CoopPage
+
+function getNum() {
+  return 4
+}
+
+function APp() {
+  return <div>{getNum()}</div>
+}

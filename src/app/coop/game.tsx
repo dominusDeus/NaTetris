@@ -15,17 +15,26 @@ import { useShadowPiece } from "@/hooks/use-shadow-piece"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
-function Game() {
-  const [currentPieceInViewport, setCurrentPiece] = useState<GamePiece>(() => generateRandomPiece())
+import { useMyState } from "./usePeerState"
+
+type PageProps = {}
+
+export function CoopGame({}: PageProps) {
+  const [currentPieceInViewport, setCurrentPiece, player2GamePiece] = useMyState<GamePiece>(() =>
+    generateRandomPiece(),
+  )
+
   const [holdBoxPiece, setHoldBoxPiece] = useState<PieceStructure>(() => ({
     ...generateRandomPiece().piece,
     isSwapable: true,
   }))
+
   const [comingPieces, setComingPieces] = useState<ComingPieces>(() => ({
     piece1: generateRandomPiece(),
     piece2: generateRandomPiece(),
     piece3: generateRandomPiece(),
   }))
+
   const [isSwapable, setSwapable] = useState<boolean>(true)
 
   const handleHoldBoxSwap = () => {
@@ -74,8 +83,27 @@ function Game() {
       <Box
         className="box-content flex items-center justify-center border-4 border-solid border-gray-600 bg-black"
         height={VIEWPORT_HEIGHT}
-        width={VIEWPORT_WIDTH}
+        width={VIEWPORT_WIDTH * 2}
       >
+        <Box.Place {...currentPieceInViewport.coords}>
+          <Piece
+            atoms={currentPieceInViewport.piece.atoms}
+            className={tw("z-50")}
+            color={currentPieceInViewport.piece.color}
+          />
+        </Box.Place>
+
+        {/* Their Piece */}
+        {player2GamePiece && (
+          <Box.Place {...player2GamePiece.coords}>
+            <Piece
+              atoms={player2GamePiece.piece.atoms}
+              className={tw("z-50")}
+              color={player2GamePiece.piece.color}
+            />
+          </Box.Place>
+        )}
+
         {shadowPiece && (
           <Box.Place {...shadowPiece.coords}>
             <Piece
@@ -85,14 +113,6 @@ function Game() {
             />
           </Box.Place>
         )}
-
-        <Box.Place {...currentPieceInViewport.coords}>
-          <Piece
-            atoms={currentPieceInViewport.piece.atoms}
-            className={tw("z-50")}
-            color={currentPieceInViewport.piece.color}
-          />
-        </Box.Place>
 
         {currentGameState.map((atom, i) => (
           <Box.Place {...atom} key={i}>
@@ -106,5 +126,3 @@ function Game() {
     </div>
   )
 }
-
-export default Game
