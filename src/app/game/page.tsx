@@ -4,13 +4,14 @@ import { useState } from "react"
 
 import { Box } from "@/components/box"
 import ComingPiecesBox, { ComingPieces } from "@/components/coming-pieces-box"
-import { PIECE_INITIAL_POSITION } from "@/components/constants"
+import { PIECE_INITIAL_POSITION, VIEWPORT_HEIGHT } from "@/components/constants"
 import { VIEWPORT_WIDTH } from "@/components/constants"
 import HoldBox from "@/components/hold-box"
 import { Atom } from "@/components/pieces/atom"
 import Piece from "@/components/pieces/piece"
 import { GamePiece, PieceStructure } from "@/components/types"
-import { useGameState, useShadowPiece } from "@/components/viewport"
+import { useGameState } from "@/hooks/use-game-state"
+import { useShadowPiece } from "@/hooks/use-shadow-piece"
 import { findPieceInitialPosition, generateRandomPiece } from "@/utils/pieces"
 import { tw } from "@/utils/tw"
 
@@ -63,7 +64,7 @@ function Game() {
     onNextStepTrigger: handleNextStepTrigger,
   })
 
-  const shadowPiece = useShadowPiece({ currentPieceInViewport, currentGameState })
+  const shadowPiece = useShadowPiece({ piece: currentPieceInViewport, gameAtoms: currentGameState })
 
   return (
     <div className="flex h-full items-center justify-center gap-4">
@@ -71,7 +72,8 @@ function Game() {
         <HoldBox holdBoxPiece={holdBoxPiece} />
       </div>
       <Box
-        className="box-content flex h-[800px] items-center justify-center border-4 border-solid border-gray-600 bg-black"
+        className="box-content flex items-center justify-center border-4 border-solid border-gray-600 bg-black"
+        height={VIEWPORT_HEIGHT}
         width={VIEWPORT_WIDTH}
       >
         <Box.Place {...currentPieceInViewport.coords}>

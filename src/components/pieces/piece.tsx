@@ -2,7 +2,7 @@ import { twMerge } from "tailwind-merge"
 
 import { CommonProps } from "@/utils/common-props"
 
-import { PIXEL_SIZE } from "../constants"
+import { ATOM_SIZE } from "../constants"
 import { Dimensions, PieceAtom } from "../types"
 import { Atom } from "./atom"
 
@@ -25,8 +25,8 @@ export function Piece({ className, style, atoms, color }: PieceProps) {
     <div
       className={twMerge(className)}
       style={{
-        minHeight: height * PIXEL_SIZE,
-        minWidth: width * PIXEL_SIZE,
+        minHeight: height * ATOM_SIZE,
+        minWidth: width * ATOM_SIZE,
         ...style,
       }}
     >
@@ -37,8 +37,8 @@ export function Piece({ className, style, atoms, color }: PieceProps) {
             key={i}
             style={{
               backgroundColor: color,
-              top: atom.y * PIXEL_SIZE,
-              left: atom.x * PIXEL_SIZE,
+              top: atom.y * ATOM_SIZE,
+              left: atom.x * ATOM_SIZE,
             }}
           />
         ))}

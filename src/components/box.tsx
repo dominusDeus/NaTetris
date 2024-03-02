@@ -3,20 +3,25 @@ import { PropsWithChildren } from "react"
 import { CommonProps } from "@/utils/common-props"
 import { tw } from "@/utils/tw"
 
-import { PIXEL_SIZE } from "./constants"
+import { ATOM_SIZE } from "./constants"
 import { Coords } from "./types"
 
 type BoxProps = CommonProps & {
+  height: number
+
+  /** How many atoms-width? */
   width: number
 }
 
 export function Box(props: PropsWithChildren<BoxProps>) {
-  const { children, className, style, width } = props
+  const { children, className, height, style, width } = props
+
+  const toPixels = (n: number) => ATOM_SIZE * n + "px"
 
   return (
     <div
       className={tw("relative", className)}
-      style={{ width: PIXEL_SIZE * width + "px", ...style }}
+      style={{ height: toPixels(height), width: toPixels(width), ...style }}
     >
       {children}
     </div>
@@ -32,8 +37,8 @@ Box.Place = function Place(props: PropsWithChildren<BoxPieceProps>) {
     <div
       className={tw("absolute", className)}
       style={{
-        top: y * PIXEL_SIZE,
-        left: x * PIXEL_SIZE,
+        top: y * ATOM_SIZE,
+        left: x * ATOM_SIZE,
         ...style,
       }}
     >
