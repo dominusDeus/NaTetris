@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "next lint",
     "prettier": "prettier -w ./src",
-    "preinstall": "node preinstall.js"
   },
   "dependencies": {
     "next": "14.0.3",
